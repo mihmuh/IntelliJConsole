@@ -15,11 +15,13 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Konsole" anchor="bottom" canCloseContents="true"
                     factoryClass="com.intellij.idekonsole.KToolWindowFactory"/>
-        <applicationService interface="com.intellij.idekonsole.KSettings"
-                            implementation="com.intellij.idekonsole.KSettings"/>
+        <applicationService serviceInterface="com.intellij.idekonsole.KSettings"
+                            serviceImplementation="com.intellij.idekonsole.KSettings"/>
     </extensions>
 
     <actions>
-        <!-- Add your actions here -->
+        <group id="KToolWindow.Toolbar">
+
+        </group>
     </actions>
 </idea-plugin>
