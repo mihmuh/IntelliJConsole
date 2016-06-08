@@ -22,7 +22,7 @@ class KCloseTabAction : DumbAwareAction("Close Konsole Tab", null, AllIcons.Acti
         val contentManager = toolwindow.contentManager
         val selectedContent = contentManager.selectedContent
         if (selectedContent != null && contentManager.contentCount > 1) {
-            ContentsUtil.closeContentTab(contentManager, selectedContent)
+            contentManager.removeContent(selectedContent, true)
         }
     }
 }
