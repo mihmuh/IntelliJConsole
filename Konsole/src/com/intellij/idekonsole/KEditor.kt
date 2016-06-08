@@ -5,7 +5,6 @@ import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.lang.Language
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonShortcuts
 import com.intellij.openapi.application.ApplicationManager
@@ -16,6 +15,7 @@ import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
+import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
@@ -57,7 +57,7 @@ class KEditor(val project: Project) : Disposable {
         component.add(scrollPane, BorderLayout.CENTER)
         component.add(editor.component, BorderLayout.SOUTH)
 
-        object : AnAction() {
+        object : DumbAwareAction() {
             override fun actionPerformed(event: AnActionEvent?) {
                 handleCommand(inputDocument.text)
 

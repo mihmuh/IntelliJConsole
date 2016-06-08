@@ -1,9 +1,12 @@
 package com.intellij.idekonsole.results
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import javax.swing.JComponent
+
+private val LOG = Logger.getInstance(KResult::class.java)
 
 class KCommandResult(val text: String) : KResult {
     val panel: JComponent
@@ -33,12 +36,18 @@ class KStdoutResult(val text: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KErrorResult(val text: String) : KResult {
+class KErrorResult(val err: Exception) : KResult {
     val panel: JComponent
 
     init {
+        LOG.warn(err)
+
         val prefix = JBLabel("ERROR: ")
-        val label = JBLabel(text).setCopyable(true)
+
+        val message = err.message.toString()
+        val classname = err.javaClass.name
+
+        val label = JBLabel("[$classname] $message").setCopyable(true)
         label.foreground = JBColor.RED
 
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)

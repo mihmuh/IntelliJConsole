@@ -24,16 +24,12 @@ public class KotlinScriptEngine extends AbstractScriptEngine implements ScriptEn
     }
   }
 
-  public static String evaluateScript(String text) {
+  public static String evaluateScript(String text) throws ScriptException {
     /*def enginePlugin = PluginManagerCore.getPlugins().find {it -> it.getName().contains("Scripting") }
     def scriptEngine = new ScriptEngineManager(enginePlugin.getPluginClassLoader()).getEngineByExtension("kt")
 */
     ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByExtension("kt");
-    try {
-      return scriptEngine.eval(text).toString();
-    } catch (ScriptException e) {
-      return e.getStackTrace()[0].toString();
-    }
+    return scriptEngine.eval(text).toString();
   }
 
   @Override
