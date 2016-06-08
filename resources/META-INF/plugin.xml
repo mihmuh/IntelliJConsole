@@ -1,0 +1,25 @@
+<idea-plugin version="2">
+    <id>idekonsole</id>
+    <name>IDE Konsole</name>
+    <version>1.0</version>
+
+    <description><![CDATA[
+      Console for IDE.<br>
+      Allows to immediately execute any code inside IDEA process with quick access to IDE structures.
+    ]]></description>
+
+    <idea-version since-build="162.0"/>
+
+    <!--<depends>com.intellij.modules.lang</depends>-->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Konsole" anchor="bottom" canCloseContents="true"
+                    factoryClass="com.intellij.idekonsole.KToolWindowFactory"/>
+        <applicationService interface="com.intellij.idekonsole.KSettings"
+                            implementation="com.intellij.idekonsole.KSettings"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
