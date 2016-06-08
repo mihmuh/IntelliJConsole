@@ -2,6 +2,7 @@ package scriptengine.kotlin.core;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
+import kotlin.Unit;
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys;
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation;
@@ -16,6 +17,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler;
 import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys;
 import org.jetbrains.kotlin.codegen.GeneratedClassLoader;
 import org.jetbrains.kotlin.codegen.state.GenerationState;
+import org.jetbrains.kotlin.codegen.state.GenerationStateEventCallback;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
 import org.jetbrains.kotlin.utils.KotlinPaths;
 import org.jetbrains.kotlin.utils.PathUtil;
@@ -51,7 +53,12 @@ public class KotlinCompiler implements MessageCollector, Disposable {
     modules.add(module);
     CompilerConfiguration configuration = createCompilerConfig(file);
     KotlinCoreEnvironment environment = KotlinCoreEnvironment.createForProduction(Disposer.newDisposable(), configuration, EnvironmentConfigFiles.JVM_CONFIG_FILES);
-    GenerationState state = KotlinToJVMBytecodeCompiler.INSTANCE.analyzeAndGenerate(environment);
+    GenerationState state = KotlinToJVMBytecodeCompiler.INSTANCE.analyzeAndGenerate(environment, new GenerationStateEventCallback() {
+      @Override
+      public Unit invoke(GenerationState generationState) {
+        return Unit.INSTANCE;
+      }
+    });
     KotlinToJVMBytecodeCompiler.INSTANCE.compileModules(environment, configuration, modules, file.getParentFile(), null, new ArrayList<>(), false);
     GeneratedClassLoader generatedClassLoader;
     if (state == null) {
