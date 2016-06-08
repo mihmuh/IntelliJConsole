@@ -2,6 +2,7 @@ package com.intellij.idekonsole
 
 import com.intellij.ide.scratch.ScratchFileService
 import com.intellij.ide.scratch.ScratchRootType
+import com.intellij.ide.ui.AntialiasingType
 import com.intellij.ide.ui.UISettings
 import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KResult
@@ -9,7 +10,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonShortcuts
-import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
@@ -23,6 +24,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.ScrollPaneFactory
+import com.intellij.util.ui.GraphicsUtil
+import sun.swing.SwingUtilities2
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.util.*
@@ -113,8 +116,7 @@ class KEditor(val project: Project) : Disposable {
         val results = ArrayList<KResult>()
 
         init {
-            UISettings.setupComponentAntialiasing(this)
-
+            putClientProperty(SwingUtilities2.AA_TEXT_PROPERTY_KEY, AntialiasingType.getAAHintForSwingComponent())
             background = JBColor.WHITE
         }
 
@@ -158,8 +160,6 @@ class KEditor(val project: Project) : Disposable {
     }
 
     private fun write(task: () -> Unit) {
-        WriteAction.run<RuntimeException> {
-            task()
-        }
+        ApplicationManager.getApplication().runWriteAction(task)
     }
 }
