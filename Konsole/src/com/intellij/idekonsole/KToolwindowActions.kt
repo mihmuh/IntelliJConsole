@@ -19,9 +19,10 @@ class KNewTabAction : DumbAwareAction("New Konsole Tab", null, AllIcons.General.
 class KCloseTabAction : DumbAwareAction("Close Konsole Tab", null, AllIcons.Actions.Delete) {
     override fun actionPerformed(e: AnActionEvent) {
         val toolwindow = getToolwindow(e.project) ?: return
-        val selectedContent = toolwindow.contentManager.selectedContent
-        if (selectedContent != null && selectedContent.isCloseable) {
-            ContentsUtil.closeContentTab(toolwindow.contentManager, selectedContent)
+        val contentManager = toolwindow.contentManager
+        val selectedContent = contentManager.selectedContent
+        if (selectedContent != null && contentManager.contentCount > 1) {
+            ContentsUtil.closeContentTab(contentManager, selectedContent)
         }
     }
 }
