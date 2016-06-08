@@ -50,7 +50,7 @@ fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
 fun context(): PsiElement? {
     val dc: DataContext? = DataManager.getInstance().getDataContextFromFocus().getResultSync(100);
     if (dc == null) return null;
-    return com.intellij.ideconsole.ConsoleDataKeys.CONTEXT_CLASS.getData(dc);
+    return KDataKeys.CONTEXT_CLASS.getData(dc);
 }
 
 fun project(): Project? {

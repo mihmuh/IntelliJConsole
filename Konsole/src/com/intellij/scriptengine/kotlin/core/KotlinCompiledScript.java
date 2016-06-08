@@ -1,7 +1,7 @@
-package scriptengine.kotlin.core;
+package com.intellij.scriptengine.kotlin.core;
 
-import scriptengine.kotlin.KotlinScriptEngine;
-import scriptengine.kotlin.util.ReflUtils;
+import com.intellij.scriptengine.kotlin.KotlinScriptEngine;
+import com.intellij.scriptengine.kotlin.util.ReflUtils;
 
 import javax.script.*;
 import java.io.File;

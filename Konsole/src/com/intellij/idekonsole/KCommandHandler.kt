@@ -3,7 +3,7 @@ package com.intellij.idekonsole
 import com.intellij.idekonsole.results.KErrorResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.results.KStdoutResult
-import scriptengine.kotlin.KotlinScriptEngine
+import com.intellij.scriptengine.kotlin.KotlinScriptEngine
 import javax.script.ScriptEngineManager
 
 object KCommandHandler {

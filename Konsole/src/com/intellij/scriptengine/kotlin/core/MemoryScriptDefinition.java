@@ -1,4 +1,4 @@
-package scriptengine.kotlin.core;
+package com.intellij.scriptengine.kotlin.core;
 
 import com.intellij.psi.PsiFile;
 import org.jetbrains.kotlin.descriptors.ScriptDescriptor;

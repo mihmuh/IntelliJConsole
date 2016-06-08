@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scriptengine.kotlin.util;
+package com.intellij.scriptengine.kotlin.util;
 
 import javax.script.ScriptException;
 import java.io.IOException;

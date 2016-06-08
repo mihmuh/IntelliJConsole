@@ -1,4 +1,4 @@
-package scriptengine.kotlin.util;
+package com.intellij.scriptengine.kotlin.util;
 
 import java.lang.reflect.Method;
 

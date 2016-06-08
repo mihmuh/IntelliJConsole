@@ -1,18 +1,11 @@
-package scriptengine.kotlin;
+package com.intellij.scriptengine.kotlin;
 
-import com.intellij.ide.plugins.PluginManagerCore;
-import scriptengine.kotlin.core.KotlinCompiledScript;
-import scriptengine.kotlin.util.ReflUtils;
-import scriptengine.kotlin.util.Utils;
+import com.intellij.scriptengine.kotlin.core.KotlinCompiledScript;
+import com.intellij.scriptengine.kotlin.util.Utils;
 
 import javax.script.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Objects;
 
 public class KotlinScriptEngine extends AbstractScriptEngine implements ScriptEngine, Compilable {
 

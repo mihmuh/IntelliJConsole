@@ -1,4 +1,4 @@
-package scriptengine.kotlin;
+package com.intellij.scriptengine.kotlin;
 
 import org.jetbrains.kotlin.cli.common.KotlinVersion;
 
