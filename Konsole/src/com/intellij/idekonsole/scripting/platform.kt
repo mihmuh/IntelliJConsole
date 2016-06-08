@@ -1,4 +1,4 @@
-package com.intellij.ideconsole
+package com.intellij.idekonsole.scripting
 
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
@@ -50,7 +50,7 @@ fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
 fun context(): PsiElement? {
     val dc: DataContext? = DataManager.getInstance().getDataContextFromFocus().getResultSync(100);
     if (dc == null) return null;
-    return ConsoleDataKeys.CONTEXT_CLASS.getData(dc);
+    return com.intellij.ideconsole.ConsoleDataKeys.CONTEXT_CLASS.getData(dc);
 }
 
 fun project(): Project? {

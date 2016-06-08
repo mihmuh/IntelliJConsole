@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Konsole/Konsole.iml" filepath="$PROJECT_DIR$/Konsole/Konsole.iml" />
       <module fileurl="file://$PROJECT_DIR$/scriptengine/kotlin-scriptengine.iml" filepath="$PROJECT_DIR$/scriptengine/kotlin-scriptengine.iml" />
-      <module fileurl="file://$PROJECT_DIR$/platform-facade/platform-facade.iml" filepath="$PROJECT_DIR$/platform-facade/platform-facade.iml" />
     </modules>
   </component>
 </project>

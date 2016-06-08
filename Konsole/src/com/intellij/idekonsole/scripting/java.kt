@@ -1,4 +1,4 @@
-package com.intellij.ideconsole
+package com.intellij.idekonsole.scripting
 
 import com.intellij.ide.util.PackageUtil
 import com.intellij.openapi.actionSystem.DataContext
