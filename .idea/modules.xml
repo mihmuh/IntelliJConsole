@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/IDEKonsole.iml" filepath="$PROJECT_DIR$/IDEKonsole.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kotlin-scriptengine.iml" filepath="$PROJECT_DIR$/kotlin-scriptengine.iml" />
     </modules>
   </component>
 </project>
