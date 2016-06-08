@@ -26,4 +26,9 @@
             <action class="com.intellij.idekonsole.KCloseTabAction" id="KCloseTabAction"/>
         </group>
     </actions>
+    <project-components>
+        <component>
+            <implementation-class>com.intellij.idekonsole.KIdeaLibrariesLoader</implementation-class>
+        </component>
+    </project-components>
 </idea-plugin>
