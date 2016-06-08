@@ -1,13 +1,23 @@
 package com.intellij.idekonsole
 
+import com.intellij.ide.scratch.ScratchFileService
+import com.intellij.ide.scratch.ScratchRootType
 import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonShortcuts
+import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.ex.EditorEx
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileTypes.LanguageFileType
+import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.project.Project
-import com.intellij.ui.EditorTextField
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.ScrollPaneFactory
 import java.awt.BorderLayout
@@ -19,27 +29,43 @@ import javax.swing.JScrollPane
 class KEditor(val project: Project) : Disposable {
     val component: JPanel
 
+    private val inputFile: VirtualFile
+    private val inputDocument: Document
+
     private val viewer = Viewer()
-    private val input: EditorTextField
+    private val input: EditorEx
     private val scrollPane: JScrollPane
 
     init {
-        input = EditorTextField()
+        val kotlinType = FileTypeManagerEx.getInstance().getFileTypeByExtension("kt") as LanguageFileType
+        val kotlinLanguage = kotlinType.language
+
+        inputFile = ScratchRootType.getInstance().createScratchFile(project, "Konsole", kotlinLanguage, "",
+                ScratchFileService.Option.create_if_missing)!!
+        inputDocument = FileDocumentManager.getInstance().getDocument(inputFile)!!
+
+        PsiDocumentManager.getInstance(project).getPsiFile(inputDocument)
+
+        input = EditorFactory.getInstance().createEditor(inputDocument, project, inputFile, false) as EditorEx
+        input.setOneLineMode(true)
 
         scrollPane = ScrollPaneFactory.createScrollPane(viewer)
         component = JPanel(BorderLayout())
         component.add(scrollPane, BorderLayout.CENTER)
-        component.add(input, BorderLayout.SOUTH)
+        component.add(input.component, BorderLayout.SOUTH)
 
         object : AnAction() {
             override fun actionPerformed(event: AnActionEvent?) {
-                handleCommand(input.text)
-                input.text = ""
+                handleCommand(inputDocument.text)
+
+                WriteAction.run<RuntimeException> {
+                    inputDocument.setText("")
+                }
 
                 scrollPane.validate()
                 scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
             }
-        }.registerCustomShortcutSet(CommonShortcuts.CTRL_ENTER, input)
+        }.registerCustomShortcutSet(CommonShortcuts.CTRL_ENTER, input.component)
     }
 
     fun handleCommand(text: String) {
@@ -48,6 +74,7 @@ class KEditor(val project: Project) : Disposable {
     }
 
     override fun dispose() {
+        EditorFactory.getInstance().releaseEditor(input)
     }
 
     private class Viewer() : JPanel() {

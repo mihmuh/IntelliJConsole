@@ -10,7 +10,8 @@
 
     <idea-version since-build="145.0"/>
 
-    <!--<depends>com.intellij.modules.lang</depends>-->
+    <depends>com.intellij.modules.lang</depends>
+    <depends>org.jetbrains.kotlin</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Konsole" anchor="bottom" canCloseContents="true"
@@ -21,7 +22,8 @@
 
     <actions>
         <group id="KToolWindow.Toolbar">
-
+            <action class="com.intellij.idekonsole.KNewTabAction" id="KNewTabAction"/>
+            <action class="com.intellij.idekonsole.KCloseTabAction" id="KCloseTabAction"/>
         </group>
     </actions>
 </idea-plugin>

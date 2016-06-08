@@ -22,10 +22,10 @@ class KToolWindow(val project: Project) : JPanel(), Disposable {
 
         DataManager.registerDataProvider(this, object : DataProvider {
             override fun getData(key: String?): Any? {
-                if (K_TOOL_WINDOW.`is`(key)) {
+                if (KDataKeys.K_TOOL_WINDOW.`is`(key)) {
                     return this@KToolWindow
                 }
-                if (K_EDITOR.`is`(key)) {
+                if (KDataKeys.K_EDITOR.`is`(key)) {
                     return editor
                 }
                 return null
