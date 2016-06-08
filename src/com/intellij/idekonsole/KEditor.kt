@@ -12,7 +12,6 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.ScrollPaneFactory
 import java.awt.BorderLayout
 import java.awt.Dimension
-import java.awt.Graphics
 import java.util.*
 import javax.swing.JPanel
 import javax.swing.JScrollPane
@@ -36,6 +35,8 @@ class KEditor(val project: Project) : Disposable {
             override fun actionPerformed(event: AnActionEvent?) {
                 handleCommand(input.text)
                 input.text = ""
+
+                scrollPane.validate()
                 scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
             }
         }.registerCustomShortcutSet(CommonShortcuts.CTRL_ENTER, input)
@@ -43,17 +44,20 @@ class KEditor(val project: Project) : Disposable {
 
     fun handleCommand(text: String) {
         viewer.add(KCommandResult(text))
-
-        // FIXME
+        viewer.add(KCommandHandler.handle(text))
     }
 
     override fun dispose() {
     }
 
     private class Viewer() : JPanel() {
-        val V_GAP = 3
+        val V_GAP = 5
 
         val results = ArrayList<KResult>()
+
+        init {
+            background = JBColor.WHITE
+        }
 
         fun add(result: KResult) {
             results.add(result)
@@ -89,27 +93,6 @@ class KEditor(val project: Project) : Disposable {
                 val size = presentation.preferredSize
 
                 presentation.setBounds(0, y, width, size.height)
-                y += size.height + V_GAP
-            }
-        }
-
-        override fun paintComponent(g: Graphics) {
-            super.paintComponent(g)
-
-            var width = width
-            var y = 0
-
-            g.color = JBColor.BLACK
-
-            for (result in results) {
-                val presentation = result.getPresentation()
-                val size = presentation.preferredSize
-
-                if (y > 0) {
-                    val offset = y + V_GAP / 2
-                    g.drawLine(0, offset, width, offset)
-                }
-
                 y += size.height + V_GAP
             }
         }
