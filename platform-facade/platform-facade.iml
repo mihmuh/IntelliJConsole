@@ -11,5 +11,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />
+    <orderEntry type="module" module-name="Konsole" />
   </component>
 </module>
