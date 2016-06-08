@@ -1,11 +1,9 @@
 package com.intellij.idekonsole
 
-import com.intellij.ide.scratch.ScratchFileService
-import com.intellij.ide.scratch.ScratchRootType
 import com.intellij.ide.ui.AntialiasingType
-import com.intellij.ide.ui.UISettings
 import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KResult
+import com.intellij.lang.Language
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -18,13 +16,11 @@ import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.ScrollPaneFactory
-import com.intellij.util.ui.GraphicsUtil
 import sun.swing.SwingUtilities2
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -46,12 +42,10 @@ class KEditor(val project: Project) : Disposable {
         val kotlinType = FileTypeManagerEx.getInstance().getFileTypeByExtension("kt") as LanguageFileType
         val kotlinLanguage = kotlinType.language
 
-        inputFile = ScratchRootType.getInstance().createScratchFile(project, "Konsole", kotlinLanguage, "",
-                ScratchFileService.Option.create_if_missing)!!
+        inputFile = createVirtualFile(kotlinLanguage)
         inputDocument = FileDocumentManager.getInstance().getDocument(inputFile)!!
 
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(inputDocument)!!
-        psiFile.putUserData(ModuleUtilCore.KEY_MODULE, KSettings.instance.getModule(project))
 
         editor = EditorFactory.getInstance().createEditor(inputDocument, project, inputFile, false) as EditorEx
         EditorActionManager.getInstance().setReadonlyFragmentModificationHandler(inputDocument, {})
@@ -73,6 +67,10 @@ class KEditor(val project: Project) : Disposable {
                 scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
             }
         }.registerCustomShortcutSet(CommonShortcuts.CTRL_ENTER, editor.component)
+    }
+
+    private fun createVirtualFile(kotlinLanguage: Language): VirtualFile {
+        return KIdeaModuleBuilder.createFile(project, kotlinLanguage)
     }
 
     private fun resetInputContent() {
@@ -107,6 +105,11 @@ class KEditor(val project: Project) : Disposable {
     }
 
     override fun dispose() {
+        ApplicationManager.getApplication().invokeLater {
+            write {
+                inputFile.delete(this)
+            }
+        }
         EditorFactory.getInstance().releaseEditor(editor)
     }
 

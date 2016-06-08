@@ -4,15 +4,15 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.project.Project
 
 @State(name = "IDEKonsole", storages = arrayOf(Storage("/ide_konsole.xml")))
 internal class KSettings : PersistentStateComponent<KSettings.Data> {
     companion object {
         val instance: KSettings
             get() = ServiceManager.getService(KSettings::class.java)
+
+        val LIB_NAME = "KONSOLE_LIB"
+        val MODULE_NAME = "KONSOLE_MODULE"
 
         val PLACEHOLDER = "{PLACEHOLDER}"
 
@@ -27,11 +27,6 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
     }
 
     override fun getState(): Data = data
-
-    fun getModule(project: Project): Module? {
-        // FIXME
-        return ModuleManager.getInstance(project).sortedModules.firstOrNull()
-    }
 
     class Data {
     }
