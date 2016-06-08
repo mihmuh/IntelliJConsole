@@ -21,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.ScrollPaneFactory
+import org.jetbrains.kotlin.idea.KotlinLanguage
 import sun.swing.SwingUtilities2
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -39,8 +40,7 @@ class KEditor(val project: Project) : Disposable {
     private val scrollPane: JScrollPane
 
     init {
-        val kotlinType = FileTypeManagerEx.getInstance().getFileTypeByExtension("kt") as LanguageFileType
-        val kotlinLanguage = kotlinType.language
+        val kotlinLanguage = KotlinLanguage.INSTANCE
 
         inputFile = createVirtualFile(kotlinLanguage)
         inputDocument = FileDocumentManager.getInstance().getDocument(inputFile)!!
