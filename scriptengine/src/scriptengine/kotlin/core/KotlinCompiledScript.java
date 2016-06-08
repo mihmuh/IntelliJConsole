@@ -7,11 +7,9 @@ import javax.script.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Objects;
+import java.nio.file.Files;
 
 public class KotlinCompiledScript extends CompiledScript {
 
@@ -23,6 +21,12 @@ public class KotlinCompiledScript extends CompiledScript {
     this.engine = engine;
     this.script = script;
     this.file = file;
+  }
+
+  public static KotlinCompiledScript createCompiledScript(KotlinScriptEngine engine, String script) throws IOException {
+    File console_tempdir = Files.createTempDirectory("console_tempdir").toFile();
+    File scriptFile = new File(console_tempdir.getAbsolutePath() + "/script.kt");
+    return new KotlinCompiledScript(engine, script, scriptFile);
   }
 
   @Override
@@ -40,17 +44,10 @@ public class KotlinCompiledScript extends CompiledScript {
     Bindings bnd = context.getBindings(ScriptContext.ENGINE_SCOPE);
     bnd.put(ScriptEngine.FILENAME, file.getAbsolutePath());
     Method executeMethod;
-    Object obj;
-    try {
-      Constructor<?> constructor = aClass.getConstructor(String[].class, Map.class);
-      obj = constructor.newInstance();
-      executeMethod = ReflUtils.findMethod(aClass, KotlinScriptEngine.EXECUTE_METHOD_NAME);
-    } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new ScriptException(e);
-    }
-    if (obj != null && executeMethod != null) {
+    executeMethod = ReflUtils.findMethod(aClass, KotlinScriptEngine.EXECUTE_METHOD_NAME);
+    if (executeMethod != null) {
       try {
-        return executeMethod.invoke(obj);
+        return executeMethod.invoke(null);
       } catch (IllegalAccessException | InvocationTargetException e) {
         throw new ScriptException(e);
       }

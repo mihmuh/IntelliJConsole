@@ -23,7 +23,7 @@ public class KotlinScriptEngine extends AbstractScriptEngine implements ScriptEn
   @Override
   public CompiledScript compile(String script) throws ScriptException {
     try {
-      return new KotlinCompiledScript(this, script, File.createTempFile("kc_cmp", ".kt"));
+      return KotlinCompiledScript.createCompiledScript(this, script);
     } catch (IOException e) {
       throw new ScriptException(e);
     }
