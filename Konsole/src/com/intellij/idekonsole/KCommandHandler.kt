@@ -3,6 +3,8 @@ package com.intellij.idekonsole
 import com.intellij.idekonsole.results.KErrorResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.results.KStdoutResult
+import scriptengine.kotlin.KotlinScriptEngine
+import javax.script.ScriptEngineManager
 
 object KCommandHandler {
     fun handle(text: String): KResult {
@@ -14,6 +16,7 @@ object KCommandHandler {
         if (text.startsWith("error: ")) {
             return KErrorResult(text.removePrefix("error: "))
         }
-        return KStdoutResult(text)
+        val evaluated = KotlinScriptEngine.evaluateScript(text);
+        return KStdoutResult(evaluated)
     }
 }

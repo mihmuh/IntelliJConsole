@@ -45,7 +45,7 @@ class KIdeaLibrariesLoader :ProjectComponent {
     }
 
     override fun projectOpened() {
-        ApplicationManager.getApplication().runWriteAction {
+        /*ApplicationManager.getApplication().runWriteAction {
             val moduleManager = ModuleManager.getInstance(myProject)
             val libraryTable = LibraryTablesRegistrar.getInstance().getLibraryTable(myProject)
             if (libraryTable.getLibraryByName(LIB_NAME) == null) {
@@ -64,6 +64,6 @@ class KIdeaLibrariesLoader :ProjectComponent {
                     model.commit()
                 }
             }
-        }
+        }*/
     }
 }

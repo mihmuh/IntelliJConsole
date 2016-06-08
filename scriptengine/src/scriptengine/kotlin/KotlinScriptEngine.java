@@ -1,5 +1,6 @@
 package scriptengine.kotlin;
 
+import com.intellij.ide.plugins.PluginManagerCore;
 import scriptengine.kotlin.core.KotlinCompiledScript;
 import scriptengine.kotlin.util.ReflUtils;
 import scriptengine.kotlin.util.Utils;
@@ -11,6 +12,7 @@ import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 
 public class KotlinScriptEngine extends AbstractScriptEngine implements ScriptEngine, Compilable {
 
@@ -26,6 +28,18 @@ public class KotlinScriptEngine extends AbstractScriptEngine implements ScriptEn
       return KotlinCompiledScript.createCompiledScript(this, script);
     } catch (IOException e) {
       throw new ScriptException(e);
+    }
+  }
+
+  public static String evaluateScript(String text) {
+    /*def enginePlugin = PluginManagerCore.getPlugins().find {it -> it.getName().contains("Scripting") }
+    def scriptEngine = new ScriptEngineManager(enginePlugin.getPluginClassLoader()).getEngineByExtension("kt")
+*/
+    ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByExtension("kt");
+    try {
+      return scriptEngine.eval(text).toString();
+    } catch (ScriptException e) {
+      return e.getStackTrace()[0].toString();
     }
   }
 
