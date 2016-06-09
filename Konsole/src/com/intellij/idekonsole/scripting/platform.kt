@@ -4,6 +4,9 @@ import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.idekonsole.KDataHolder
 import com.intellij.idekonsole.KEditor
+import com.intellij.idekonsole.results.KPsiElementsResult
+import com.intellij.idekonsole.results.KResult
+import com.intellij.idekonsole.results.KStdoutResult
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -69,8 +72,24 @@ fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> = this.filter 
 
 fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? = this.withName(name).firstOrNull();
 
-fun print(s: String) {
-    editor()?.handleCommand(s);
+fun show(s: String) {
+    show(KStdoutResult(s))
+}
+
+fun show(result: KResult) {
+    editor()?.show(result);
+}
+
+fun show(o: Any) {
+    show(o.toString())
+}
+
+fun show(vararg node: PsiElement) {
+    show(node.toList())
+}
+
+fun show(nodes: List<PsiElement>) {
+    show(KPsiElementsResult(nodes))
 }
 
 

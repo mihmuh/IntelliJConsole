@@ -179,4 +179,9 @@ class KEditor(val project: Project) : Disposable {
     private fun write(task: () -> Unit) {
         ApplicationManager.getApplication().runWriteAction(task)
     }
+
+    fun show(result : KResult) : KResult {
+        viewer.add(result)
+        return result
+    }
 }
