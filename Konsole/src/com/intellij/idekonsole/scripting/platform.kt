@@ -87,6 +87,10 @@ fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> = this.filter 
 
 fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? = this.withName(name).firstOrNull();
 
+fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<PsiElement> {
+    return this.filterIsInstance(k.myRef);
+}
+
 fun show(r: KResult) {
     editor()?.addResult(r)
 }
