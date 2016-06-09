@@ -44,7 +44,12 @@ fun nodes() : Stream<PsiElement> {
     val project = project()
     return project!!.packages().stream()
             .flatMap { it.getFiles(GlobalSearchScope.projectScope(project)).map { it!! }.stream() }
-            .flatMap { it.children.map { it!! }.stream() }.filter { it !is PsiWhiteSpace }
+            .flatMap { it.descendants() }.filter { it !is PsiWhiteSpace }
+}
+
+fun PsiElement.descendants() : Stream<PsiElement> {
+    return this.children.toList().stream()
+            .flatMap { it.descendants() }
 }
 
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
