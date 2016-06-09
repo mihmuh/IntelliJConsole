@@ -18,6 +18,7 @@ object KTemplates {
 
             import com.intellij.idekonsole.results.*
             import com.intellij.idekonsole.runtime.*
+            import com.intellij.idekonsole.scripting.*
 
             ${FOLDING_START}fun main_exec(): KResult {
                 ${CARET}return KStdoutResult("Hello World")
