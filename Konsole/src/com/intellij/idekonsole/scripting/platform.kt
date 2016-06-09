@@ -128,7 +128,8 @@ fun show(o: Any) {
     } else if (o is String) {
         show(o)
     } else if (o is List<*>) {
-        show(o)
+        //strange effect if we remove "odd" code - ctrl-b on show will go to the same method
+        show(o as List<Any?>)
     } else if (o is PsiElement) {
         show(o)
     } else {
