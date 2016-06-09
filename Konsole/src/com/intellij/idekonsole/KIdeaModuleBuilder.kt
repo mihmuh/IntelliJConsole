@@ -1,9 +1,12 @@
 package com.intellij.idekonsole
 
 import com.intellij.ide.highlighter.ModuleFileType
+import com.intellij.ide.plugins.IdeaPluginDescriptorImpl
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.lang.Language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.application.PluginPathManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.ModuleTypeId
@@ -12,12 +15,14 @@ import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ModuleRootModificationUtil
+import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
+import java.net.URL
 
 /**
  * @author simon
@@ -90,12 +95,21 @@ object KIdeaModuleBuilder {
             val libraryModel = newLibrary.modifiableModel
 
             val ideaLibraries = VfsUtil.getUrlForLibraryRoot(File(PathManager.getHomePath()))
-            val pluginLibraries1 = VfsUtil.getUrlForLibraryRoot(File(PathManager.getPreInstalledPluginsPath()))
-            val pluginLibraries2 = VfsUtil.getUrlForLibraryRoot(File(PathManager.getPluginsPath()))
-
             libraryModel.addJarDirectory(ideaLibraries, true)
-            libraryModel.addJarDirectory(pluginLibraries1, true)
-            libraryModel.addJarDirectory(pluginLibraries2, true)
+
+            for (p in PluginManager.getPlugins()) {
+                val clsUrl = "file://${p.path}/classes"
+                val vf = VfsUtil.findFileByURL(URL(clsUrl))
+                if (vf != null) {
+                    libraryModel.addRoot(clsUrl, OrderRootType.CLASSES)
+                }
+
+                val libUrl = "file://${p.path}/lib"
+                val vf2 = VfsUtil.findFileByURL(URL(libUrl))
+                if (vf2 != null) {
+                    libraryModel.addJarDirectory(vf2, true)
+                }
+            }
 
             libraryModel.commit()
 
