@@ -132,6 +132,8 @@ fun show(o: Any) {
         show(o as List<Any?>)
     } else if (o is PsiElement) {
         show(o)
+    } else if (o is Stream<*>) {
+        show(o as Stream<Any>)
     } else {
         show(o.toString())
     }
