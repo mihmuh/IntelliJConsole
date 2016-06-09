@@ -36,7 +36,7 @@ fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project
 }
 
 fun <T : PsiElement> instances(cls: PsiClassRef<T>): Stream<T> {
-    return nodes().filter { cls.myRef.isAssignableFrom(it.javaClass) }.map { it as T }
+    return nodes().withKind(cls)
 }
 
 fun <T> List<T>.stream() = J8Util.stream(this);
@@ -94,8 +94,12 @@ fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> = this.filter 
 
 fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? = this.withName(name).firstOrNull();
 
-fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<PsiElement> {
+fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<T> {
     return this.filterIsInstance(k.myRef);
+}
+
+fun <T : PsiElement> Stream<PsiElement>.withKind(k: PsiClassRef<T>): Stream<T> {
+    return this.filter { k.myRef.isAssignableFrom(it.javaClass) }.map { it as T };
 }
 
 fun show(r: Stream<Any?>) {
