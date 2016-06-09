@@ -19,7 +19,6 @@ object KTemplates {
             import com.intellij.idekonsole.results.*
             import com.intellij.idekonsole.runtime.*
             import com.intellij.idekonsole.scripting.*
-            import com.intellij.psi.JavaTokenType
 
             ${FOLDING_START}fun main_exec(): KResult? {
                 ${CARET}return KStdoutResult("Hello World")
@@ -63,6 +62,24 @@ object KTemplates {
         return sb
     }
 
+    private fun generateJavaTokenReferences(module: Module): CharSequence {
+        val sb = StringBuilder()
+        sb.append("package com.intellij.idekonsole.runtime;\n")
+        sb.append("\n")
+        sb.append("import com.intellij.psi.JavaTokenType\n")
+        sb.append("\n")
+
+        val scope = module.getModuleWithDependenciesAndLibrariesScope(false)
+        val element = JavaPsiFacade.getInstance(module.project).findClass("import com.intellij.psi.JavaTokenType", scope)!!
+        val fields = element.fields
+
+        for (field in fields) {
+            createJavaTokenRef(sb, field.name!!)
+        }
+
+        return sb
+    }
+
     private fun createPsiClassRef(sb: StringBuilder, qualifiedName: String) {
         if (qualifiedName.endsWith("Impl")) return
         if (!qualifiedName.startsWith("com.intellij.psi.")) return
@@ -71,5 +88,9 @@ object KTemplates {
         if (className.contains(".")) return
 
         sb.append("val $className = PsiClassRef($qualifiedName::class.java)\n")
+    }
+
+    private fun createJavaTokenRef(sb: StringBuilder, name: String) {
+        sb.append("val $name = JavaTokenType.$name\n")
     }
 }
