@@ -44,13 +44,11 @@ object KTemplates {
     }
 
     fun initHelperClasses(module: Module) {
-        val referenceFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + "PsiClassReferences.kt")
-        if (referenceFile.length == 0L) {
-            DumbService.getInstance(module.project).runWhenSmart {
-                val content = generatePsiClassReferences(module)
-                val ioFile = VfsUtil.virtualToIoFile(referenceFile)
-                FileUtil.writeToFile(ioFile, content.toString())
-            }
+        val psiStubsFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.PSI_STUBS)
+        val javaTokensFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.JAVA_TOKEN_STUBS)
+        DumbService.getInstance(module.project).runWhenSmart {
+            FileUtil.writeToFile(VfsUtil.virtualToIoFile(psiStubsFile), generatePsiClassReferences(module).toString())
+            FileUtil.writeToFile(VfsUtil.virtualToIoFile(javaTokensFile), generateJavaTokenReferences(module).toString())
         }
     }
 
@@ -58,7 +56,7 @@ object KTemplates {
         val sb = StringBuilder()
         sb.append("package com.intellij.idekonsole.runtime;\n")
         sb.append("\n")
-        sb.append("import com.intellij.idekonsole.scripting.PsiClassRef\n")
+        sb.append("import com.intellij.idekonsole.scripting.PsiClassRef;\n")
         sb.append("\n")
 
         val scope = module.getModuleWithDependenciesAndLibrariesScope(false)
@@ -77,11 +75,11 @@ object KTemplates {
         val sb = StringBuilder()
         sb.append("package com.intellij.idekonsole.runtime;\n")
         sb.append("\n")
-        sb.append("import com.intellij.psi.JavaTokenType\n")
+        sb.append("import com.intellij.psi.JavaTokenType;\n")
         sb.append("\n")
 
         val scope = module.getModuleWithDependenciesAndLibrariesScope(false)
-        val element = JavaPsiFacade.getInstance(module.project).findClass("import com.intellij.psi.JavaTokenType", scope)!!
+        val element = JavaPsiFacade.getInstance(module.project).findClass("com.intellij.psi.JavaTokenType", scope)!!
         val fields = element.fields
 
         for (field in fields) {
