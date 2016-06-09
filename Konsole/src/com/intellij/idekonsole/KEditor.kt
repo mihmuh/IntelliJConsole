@@ -5,8 +5,6 @@ import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KExceptionResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonShortcuts
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
@@ -15,7 +13,6 @@ import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
@@ -97,6 +94,8 @@ class KEditor(val project: Project) : Disposable {
     }
 
     fun handleCommand() {
+        if (containsErrors()) return
+
         val text = inputDocument.text
         val marker = textMarker
         val commandText = if (marker != null && marker.isValid) {
@@ -191,5 +190,9 @@ class KEditor(val project: Project) : Disposable {
     fun show(result : KResult) : KResult {
         viewer.add(result)
         return result
+    }
+
+    fun containsErrors(): Boolean {
+        return KErrorUtil.containsError(project, editor)
     }
 }

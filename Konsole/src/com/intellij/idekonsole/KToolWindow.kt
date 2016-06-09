@@ -21,6 +21,7 @@ class KToolWindow(val project: Project) : JPanel(), Disposable {
 
         val actionGroup = ActionManager.getInstance().getAction("KToolWindow.Toolbar") as ActionGroup
         val toolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true)
+        toolbar.setTargetComponent(this)
         add(toolbar.component, BorderLayout.NORTH)
 
         for (action in actionGroup.getChildren(null)) {

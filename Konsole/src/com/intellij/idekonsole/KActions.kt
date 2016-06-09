@@ -1,6 +1,7 @@
 package com.intellij.idekonsole
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
 
@@ -17,7 +18,9 @@ class ClearOutputAction : DumbAwareAction("Clear Output", null, AllIcons.General
 
 class ExecuteAction : DumbAwareAction("Execute", null, AllIcons.Actions.Rerun) {
     override fun update(e: AnActionEvent) {
-        e.presentation.isEnabled = e.getData(KDataKeys.K_EDITOR) != null
+        val editor = e.getData(KDataKeys.K_EDITOR)
+        e.presentation.isEnabled = e.place == ActionPlaces.MAIN_MENU ||
+                editor != null && !editor.containsErrors()
     }
 
     override fun actionPerformed(e: AnActionEvent) {
