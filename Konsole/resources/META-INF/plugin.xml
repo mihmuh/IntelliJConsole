@@ -26,6 +26,12 @@
                     use-shortcut-of="Console.Execute.Multiline"/>
             <action class="com.intellij.idekonsole.ClearOutputAction" id="KonsoleClearOutputAction"/>
             <action class="com.intellij.idekonsole.ConsoleHistoryAction" id="KonsoleConsoleHistoryAction"/>
+            <action class="com.intellij.idekonsole.PreviousCommandAction" id="PreviousCommandAction">
+                <keyboard-shortcut first-keystroke="ctrl UP" keymap="$default"/>
+            </action>
+            <action class="com.intellij.idekonsole.NextCommandAction" id="NextCommandAction">
+                <keyboard-shortcut first-keystroke="ctrl DOWN" keymap="$default"/>
+            </action>>
         </group>
     </actions>
 </idea-plugin>

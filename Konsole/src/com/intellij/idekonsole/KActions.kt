@@ -67,3 +67,15 @@ class ConsoleHistoryAction : DumbAwareAction("Show History", null, AllIcons.Gene
         }
     }
 }
+
+class PreviousCommandAction : DumbAwareAction("Previous command", null, AllIcons.Actions.PreviousOccurence){
+    override fun actionPerformed(e: AnActionEvent?) {
+        println("prev")
+    }
+}
+
+class NextCommandAction : DumbAwareAction("Next command", null, AllIcons.Actions.NextOccurence){
+    override fun actionPerformed(next: AnActionEvent?) {
+        println("next")
+    }
+}
