@@ -72,6 +72,7 @@ class KPsiElementsResult(val elements: List<PsiElement>) : KResult {
         val label = JBLabel("Show Usages")
         label.foreground = Color.BLUE;
         val project = project()
+        //todo one node should be shown as a ref
         if (project != null) {
             label.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
@@ -81,6 +82,9 @@ class KPsiElementsResult(val elements: List<PsiElement>) : KResult {
         }
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
     }
+
+    constructor (element: PsiElement):this(listOf(element))
+    constructor (vararg element: PsiElement):this(element.toList())
 
     override fun getPresentation(): JComponent = panel
 }
