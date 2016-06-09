@@ -91,6 +91,10 @@ fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<PsiEleme
     return this.filterIsInstance(k.myRef);
 }
 
+fun show(r: Stream<Any>) {
+    show(r.toArray().toList())
+}
+
 fun show(r: KResult) {
     editor()?.addResult(r)
 }
