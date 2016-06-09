@@ -21,7 +21,8 @@ object KTemplates {
             import com.intellij.idekonsole.scripting.*
 
             fun main_exec(){
-              ${FOLDING_START}${CARET}${FOLDING_END}
+              ${FOLDING_START}${CARET}
+              ${FOLDING_END}
             }
 
             """.trimIndent()

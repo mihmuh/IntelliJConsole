@@ -7,9 +7,7 @@ import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.scripting.show
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.RangeMarker
+import com.intellij.openapi.editor.*
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -75,19 +73,24 @@ class KEditor(val project: Project) : Disposable {
 
             textMarker = inputDocument.createRangeMarker(foldingStart, foldingEnd)
 
-            //            inputDocument.createGuardedBlock(0, offset)
-            //            inputDocument.createGuardedBlock(offset + 1, inputDocument.textLength)
+//            inputDocument.createGuardedBlock(0, foldingStart)
+//            inputDocument.createGuardedBlock(foldingEnd + 1, inputDocument.textLength)
 
-            editor.foldingModel.runBatchFoldingOperation({
-                val regions = editor.foldingModel.allFoldRegions
+            val fModel = editor.foldingModel
+            fModel.runBatchFoldingOperation({
+                val regions = fModel.allFoldRegions
                 for (region in regions) {
-                    editor.foldingModel.removeFoldRegion(region)
+                    fModel.removeFoldRegion(region)
                 }
 
-                val region1 = editor.foldingModel.addFoldRegion(0, foldingStart, "")
-                val region2 = editor.foldingModel.addFoldRegion(foldingEnd, inputDocument.textLength, "")
-                region1?.isExpanded = false
-                region2?.isExpanded = false
+                val fGroup = FoldingGroup.newGroup("one")
+                val region1 = fModel.createFoldRegion(0, foldingStart, "> ", fGroup, false)
+                fModel.addFoldRegion(region1!!)
+                val region2 = fModel.createFoldRegion(foldingEnd, inputDocument.textLength, "", fGroup, false)
+                fModel.addFoldRegion(region2!!)
+
+                region1.isExpanded = false
+                region2.isExpanded = false
             })
 
             editor.caretModel.moveToOffset(caretOffset)
