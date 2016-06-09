@@ -76,16 +76,6 @@ object KIdeaModuleBuilder {
             if (contentEntry == null) contentEntry = rootModel.addContentEntry(moduleDir)
             contentEntry.addSourceFolder(sourceDir, false)
 
-
-            val oldDependencies = rootModel.getModuleDependencies(false).toHashSet()
-
-            val modules = ModuleManager.getInstance(project).modules
-            for (other in modules) {
-                if (other == module) continue
-                if (oldDependencies.contains(other)) continue
-                ModuleRootModificationUtil.addDependency(module, other)
-            }
-
             rootModel.commit()
         }
     }
