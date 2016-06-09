@@ -98,21 +98,26 @@ private fun addSubpackages(result: ArrayList<PsiPackage>, psiPackage: PsiPackage
 
 private fun parserFacade() = JavaPsiFacade.getInstance(project()).parserFacade
 
-fun String.asClass(): PsiClass = parserFacade().createClassFromText(this, context());
+fun String.asClass(): PsiClass = parserFacade().createClassFromText(this, null);
 
-fun String.asStatement(): PsiStatement = parserFacade().createStatementFromText(this, context());
+fun String.asStatement(): PsiStatement = parserFacade().createStatementFromText(this, null);
 
-fun String.asTypeElement(): PsiTypeElement = parserFacade().createTypeElementFromText(this, context());
+fun String.asTypeElement(context : PsiElement?): PsiTypeElement = parserFacade().createTypeElementFromText(this, context);
 
-fun String.asType(): PsiType = this.asTypeElement().type;
+fun String.asType(context : PsiElement?): PsiType = asTypeElement(context).type;
 
-fun String.asExpression(): PsiExpression = parserFacade().createExpressionFromText(this, context());
+fun String.asType(): PsiType = asType(null);
+
+fun String.asExpression(): PsiExpression = parserFacade().createExpressionFromText(this, null);
 
 fun PsiClass.inheritors(): List<PsiClass>{
     return ClassInheritorsSearch.search(this).toList();
 }
 
+fun PsiExpression.hasType(type : String) : Boolean {
+    return this.type!!.isAssignableFrom(type.asType(this))
+}
+
 /*
 * .asPsi(experimantal)
-* .isSubtype, .type, type//
 * */
