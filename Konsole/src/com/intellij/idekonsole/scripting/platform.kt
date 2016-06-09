@@ -98,7 +98,7 @@ fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<PsiEleme
     return this.filterIsInstance(k.myRef);
 }
 
-fun show(r: Stream<Any>) {
+fun show(r: Stream<Any?>) {
     show(r.toArray().toList())
 }
 
@@ -121,7 +121,7 @@ fun <T:PsiElement> show(refactoring: Refactoring<T>){
     show("No elements found")
 }
 
-fun show(e: List<Any>) {
+fun show(e: List<Any?>) {
     if (e.isNotEmpty()) {
         if (e.all { it is PsiElement }) {
             return show(KUsagesResult(e.filterIsInstance<PsiElement>(), ""))
@@ -148,12 +148,11 @@ fun show(o: Any?) {
     } else if (o is String) {
         show(o)
     } else if (o is List<*>) {
-        //strange effect if we remove "odd" code - ctrl-b on show will go to the same method
-        show(o as List<Any?>)
+        show(o)
     } else if (o is PsiElement) {
         show(o)
     } else if (o is Stream<*>) {
-        show(o as Stream<Any>)
+        show(o as Stream<Any?>)
     } else {
         show(o.toString())
     }
