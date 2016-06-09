@@ -8,27 +8,37 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.psi.*
+import com.intellij.psi.codeStyle.NameUtil
+import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.psi.search.SearchScope
 import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
 
-//todo fun classes
-//todo fun method
-
-fun cls(name: String): PsiClass? {
-    //todo filter classes by name end, not by fq class name, e.g. findClass(b.c) can return "a.b.c"
+fun classes(name: String): List<PsiClass?> {
     val p = project()
-    if (p == null) return null;
-    return JavaPsiFacade.getInstance(p).findClass(name, GlobalSearchScope.allScope(p));
+    val sn = PsiNameHelper.getShortClassName(name)
+    val candidates = PsiShortNamesCache.getInstance(project()).getClassesByName(sn, EverythingGlobalScope(p))
+    return candidates.filter {
+        val qname = it.qualifiedName
+        qname != null && qname.endsWith(name)
+    }
 }
 
+fun cls(name: String): PsiClass? = classes(name).filterNotNull().firstOrNull()
+
 fun methods(classAndMethod: String): List<PsiMethod> {
-    //todo
-    val className = classAndMethod.substringBeforeLast(".", "DefaultClass")
-    val methodName = classAndMethod.substringAfterLast(".", "DefaultMethod")
-    val m = cls(className)?.findMethodsByName(methodName, false);
-    return if (m == null) Collections.emptyList() else m.toList();
+    val i = classAndMethod.lastIndexOf(".")
+    assert(i != -1);
+    val className = classAndMethod.substring(0, i)
+    val methodName = classAndMethod.substring(i + 1)
+    val m = classes(className).filterNotNull().flatMap { it.findMethodsByName(methodName, false).toList() };
+    return m.toList();
+}
+
+fun meth(classAndMethod: String): PsiMethod? {
+    return methods(classAndMethod).first()
 }
 
 fun Project.topPackages(): List<PsiPackage> {
