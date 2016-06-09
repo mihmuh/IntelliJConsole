@@ -108,7 +108,7 @@ class KEditor(val project: Project) : Disposable {
                     viewer.add(KExceptionResult(e))
                 }
 
-                resetInputContent()
+//                resetInputContent()
 
                 scrollPane.validate()
                 scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
