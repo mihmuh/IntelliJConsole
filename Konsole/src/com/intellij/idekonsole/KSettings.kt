@@ -16,6 +16,9 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
 
         val PLACEHOLDER = "{PLACEHOLDER}"
 
+        val FILE_NAME =
+                "konsole/runtime/Test.kt";
+
         // FIXME
         val INITIAL_CONTENT =
                 """

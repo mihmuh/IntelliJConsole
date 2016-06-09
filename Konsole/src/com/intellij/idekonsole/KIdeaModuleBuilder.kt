@@ -34,7 +34,9 @@ object KIdeaModuleBuilder {
 
 
         val dir = VfsUtil.virtualToIoFile(getSourceDir(module))
-        val file = File(dir, "Test.kt")
+
+        val file = File(dir, KSettings.FILE_NAME)
+        file.parentFile.mkdirs()
 
         if (!file.exists()) {
             file.createNewFile()
