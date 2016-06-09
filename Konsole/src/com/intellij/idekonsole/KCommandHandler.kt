@@ -10,6 +10,7 @@ import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.ExceptionUtil
 import java.net.URL
+import java.net.URLClassLoader
 
 object KCommandHandler {
     private val LOG = Logger.getInstance(KResult::class.java)
@@ -20,7 +21,7 @@ object KCommandHandler {
         CompilerManager.getInstance(module.project).compile(module, { aborted, errors, warnings, compileContext ->
             val outputPath = CompilerPaths.getModuleOutputPath(module, false)
             val url = URL("file://$outputPath/")
-            val classloader = MegaLoader(url)
+            val classloader = URLClassLoader(arrayOf(url), AllPluginsClassLoader.INSTANCE)
             val clazz = classloader.loadClass("konsole.runtime.TestKt");
 
             KDataHolder.project = module.project
