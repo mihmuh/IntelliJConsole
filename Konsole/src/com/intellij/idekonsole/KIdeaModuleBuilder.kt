@@ -1,12 +1,9 @@
 package com.intellij.idekonsole
 
 import com.intellij.ide.highlighter.ModuleFileType
-import com.intellij.ide.plugins.IdeaPluginDescriptorImpl
 import com.intellij.ide.plugins.PluginManager
-import com.intellij.lang.Language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.PathManager
-import com.intellij.openapi.application.PluginPathManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.ModuleTypeId
@@ -14,7 +11,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.roots.ModuleRootModificationUtil
 import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
@@ -22,23 +18,21 @@ import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
-import java.net.URL
 
 /**
  * @author simon
  */
 object KIdeaModuleBuilder {
-    fun createFile(project: Project, language: Language): VirtualFile {
-        val module = createModule(project)
-        configureModule(project, module)
+    fun createConsoleFile(module: Module): VirtualFile {
+        return createKtClass(module, KSettings.CONSOLE_FILE_PATH)
+    }
 
-
-        val dir = VfsUtil.virtualToIoFile(getSourceDir(module))
-
-        val file = File(dir, KSettings.FILE_NAME)
-        file.parentFile.mkdirs()
+    fun createKtClass(module: Module, name: String): VirtualFile {
+        val dir = VfsUtil.virtualToIoFile(KIdeaModuleBuilder.getSourceDir(module))
+        val file = File(dir, name)
 
         if (!file.exists()) {
+            file.parentFile.mkdirs()
             file.createNewFile()
         }
 
@@ -52,17 +46,21 @@ object KIdeaModuleBuilder {
 
     fun createModule(project: Project): Module {
         val moduleManager = ModuleManager.getInstance(project)
-        val module = moduleManager.findModuleByName(KSettings.MODULE_NAME)
-        if (module != null) return module
+        var module = moduleManager.findModuleByName(KSettings.MODULE_NAME)
+        if (module == null) {
+            module = ApplicationManager.getApplication().runWriteAction(Computable {
+                val moduleName = KSettings.MODULE_NAME.toLowerCase()
+                val modulePath = project.baseDir.path + '/' + moduleName + '/'
+                val path = modulePath + moduleName + ModuleFileType.DOT_DEFAULT_EXTENSION
+                val newModule = moduleManager.newModule(path, ModuleTypeId.JAVA_MODULE)
 
-        return ApplicationManager.getApplication().runWriteAction(Computable {
-            val moduleName = KSettings.MODULE_NAME.toLowerCase()
-            val modulePath = project.baseDir.path + '/' + moduleName + '/'
-            val path = modulePath + moduleName + ModuleFileType.DOT_DEFAULT_EXTENSION
-            val newModule = moduleManager.newModule(path, ModuleTypeId.JAVA_MODULE)
+                return@Computable newModule
+            })
+        }
 
-            return@Computable newModule
-        })
+        configureModule(project, module!!)
+
+        return module
     }
 
     fun configureModule(project: Project, module: Module) {

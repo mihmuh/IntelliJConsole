@@ -4,7 +4,6 @@ import com.intellij.ide.ui.AntialiasingType
 import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KExceptionResult
 import com.intellij.idekonsole.results.KResult
-import com.intellij.lang.Language
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonShortcuts
@@ -14,6 +13,7 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -22,7 +22,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.ScrollPaneFactory
-import org.jetbrains.kotlin.idea.KotlinLanguage
 import sun.swing.SwingUtilities2
 import java.awt.Dimension
 import java.util.*
@@ -32,6 +31,7 @@ import javax.swing.JScrollPane
 class KEditor(val project: Project) : Disposable {
     private val splitter: JBSplitter
 
+    val module: Module
     val inputFile: VirtualFile
     val inputDocument: Document
     val inputPsiFile: PsiFile
@@ -41,10 +41,12 @@ class KEditor(val project: Project) : Disposable {
     private val scrollPane: JScrollPane
 
     init {
-        val kotlinLanguage = KotlinLanguage.INSTANCE
+        module = KIdeaModuleBuilder.createModule(project)
 
-        inputFile = createVirtualFile(kotlinLanguage)
+        inputFile = KIdeaModuleBuilder.createConsoleFile(module)
         inputDocument = FileDocumentManager.getInstance().getDocument(inputFile)!!
+
+        KTemplates.initHelperClasses(module)
 
         inputPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(inputDocument)!!
 
@@ -64,10 +66,6 @@ class KEditor(val project: Project) : Disposable {
                 handleCommand(inputDocument.text)
             }
         }.registerCustomShortcutSet(CommonShortcuts.CTRL_ENTER, editor.component)
-    }
-
-    private fun createVirtualFile(kotlinLanguage: Language): VirtualFile {
-        return KIdeaModuleBuilder.createFile(project, kotlinLanguage)
     }
 
     private fun resetInputContent() {
@@ -101,7 +99,6 @@ class KEditor(val project: Project) : Disposable {
 
     fun handleCommand(text: String) {
         viewer.add(KCommandResult(text))
-        val module = KIdeaModuleBuilder.createModule(project)
         val callback = KCommandHandler.compile(module, this)
         callback.doWhenDone(Runnable {
             ApplicationManager.getApplication().invokeLater {
