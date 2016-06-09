@@ -3,7 +3,9 @@ package com.intellij.idekonsole
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.editor.actions.ContentChooser
 import com.intellij.openapi.project.DumbAwareAction
+import java.util.*
 
 class ClearOutputAction : DumbAwareAction("Clear Output", null, AllIcons.General.Remove) {
     override fun update(e: AnActionEvent) {
@@ -26,5 +28,42 @@ class ExecuteAction : DumbAwareAction("Execute", null, AllIcons.Actions.Rerun) {
     override fun actionPerformed(e: AnActionEvent) {
         val editor = e.getRequiredData(KDataKeys.K_EDITOR)
         editor.handleCommand()
+    }
+}
+
+class ConsoleHistoryAction : DumbAwareAction("Show History", null, AllIcons.General.MessageHistory) {
+    override fun update(e: AnActionEvent) {
+        val editor = e.getData(KDataKeys.K_EDITOR)
+        e.presentation.isEnabled = editor != null && e.project != null
+    }
+
+    override fun actionPerformed(e: AnActionEvent) {
+        val editor = e.getRequiredData(KDataKeys.K_EDITOR)
+        val project = e.project!!
+
+        val contentChooser = object : ContentChooser<String>(project, "Console History", false) {
+            override fun removeContentAt(content: String) {
+                KSettings.instance.removeConsoleHistory(content)
+            }
+
+            override fun getStringRepresentationFor(content: String): String {
+                return content
+            }
+
+            override fun getContents(): List<String> {
+                val recentMessages = KSettings.instance.getConsoleHistory()
+                Collections.reverse(recentMessages)
+                return recentMessages
+            }
+        }
+
+        if (contentChooser.showAndGet()) {
+            val selectedIndex = contentChooser.selectedIndex
+
+            if (selectedIndex >= 0) {
+                val selectedText = contentChooser.allContents[selectedIndex]
+                editor.setText(selectedText)
+            }
+        }
     }
 }

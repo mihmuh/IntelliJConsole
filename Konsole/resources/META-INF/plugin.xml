@@ -25,6 +25,7 @@
             <action class="com.intellij.idekonsole.ClearOutputAction" id="KonsoleClearOutputAction"/>
             <action class="com.intellij.idekonsole.ExecuteAction" id="KonsoleExecuteAction"
                     use-shortcut-of="Console.Execute.Multiline"/>
+            <action class="com.intellij.idekonsole.ConsoleHistoryAction" id="KonsoleConsoleHistoryAction"/>
         </group>
     </actions>
 </idea-plugin>

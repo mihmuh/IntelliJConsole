@@ -4,6 +4,7 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import java.util.*
 
 @State(name = "IDEKonsole", storages = arrayOf(Storage("/ide_konsole.xml")))
 internal class KSettings : PersistentStateComponent<KSettings.Data> {
@@ -26,6 +27,24 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
 
     override fun getState(): Data = data
 
+    fun getConsoleHistory() = ArrayList(data.CONSOLE_HISTORY)
+
+    fun appendConsoleHistory(string: String) {
+        data.CONSOLE_HISTORY.remove(string)
+
+        data.CONSOLE_HISTORY.add(string)
+        if (data.CONSOLE_HISTORY.size > 50) {
+            val oldHistory = data.CONSOLE_HISTORY
+            data.CONSOLE_HISTORY = ArrayList<String>()
+            data.CONSOLE_HISTORY.addAll(oldHistory.subList(oldHistory.size - 50, oldHistory.size))
+        }
+    }
+
+    fun removeConsoleHistory(content: String) {
+        data.CONSOLE_HISTORY.remove(content)
+    }
+
     class Data {
+        var CONSOLE_HISTORY = ArrayList<String>()
     }
 }

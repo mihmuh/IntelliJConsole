@@ -97,7 +97,10 @@ class KEditor(val project: Project) : Disposable {
     fun handleCommand() {
         if (containsErrors()) return
 
+
         val text = inputDocument.text
+        KSettings.instance.appendConsoleHistory(text)
+
         val marker = textMarker
         val commandText = if (marker != null && marker.isValid) {
             text.substring(marker.startOffset, marker.endOffset)
@@ -196,5 +199,11 @@ class KEditor(val project: Project) : Disposable {
 
     fun containsErrors(): Boolean {
         return KErrorUtil.containsError(project, editor)
+    }
+
+    fun setText(selectedText: String) {
+        write {
+            inputDocument.setText(selectedText)
+        }
     }
 }
