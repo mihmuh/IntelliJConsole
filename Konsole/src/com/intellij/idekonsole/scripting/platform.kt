@@ -17,6 +17,7 @@ import com.intellij.psi.search.SearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
 import com.intellij.util.CommonProcessors
+import java.util.stream.Stream
 
 //----------- find, refactor
 
@@ -33,8 +34,15 @@ fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project
     return processor.getResults().map { it };
 }
 
-fun <T : PsiElement> instances(cls: PsiClassRef<T>): List<T> {
-    return emptyList()
+fun <T : PsiElement> instances(cls: PsiClassRef<T>): Stream<T> {
+    return nodes().filter { cls.javaClass.isAssignableFrom(it.javaClass) }.map { it as T }
+}
+
+fun nodes() : Stream<PsiElement> {
+    val project = project()
+    return project!!.packages().stream()
+            .flatMap { it.getFiles(GlobalSearchScope.projectScope(project)).map { it!! }.stream() }
+            .flatMap { it.children.map { it!! }.stream() }
 }
 
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
