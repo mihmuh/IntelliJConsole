@@ -22,7 +22,7 @@ import java.util.stream.Stream
 
 //----------- find, refactor
 
-fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project())): List<UsageInfo> {
+fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project())): List<PsiReference> {
     val project = project();
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false);
     val processor = CommonProcessors.CollectProcessor<UsageInfo>()
@@ -32,7 +32,7 @@ fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project
     for (psiElement in psiElements) {
         handler.processElementUsages(psiElement, processor, options)
     }
-    return processor.getResults().map { it };
+    return processor.getResults().map { it.reference }.filterNotNull();
 }
 
 fun <T : PsiElement> instances(cls: PsiClassRef<T>): Stream<T> {
@@ -130,8 +130,8 @@ fun show(e: List<Any?>) {
         if (e.all { it is PsiElement }) {
             return show(KUsagesResult(e.filterIsInstance<PsiElement>(), ""))
         }
-        if (e.all { it is UsageInfo }) {
-            return show(KUsagesResult(e.filterIsInstance<UsageInfo>().map { it.element!! }, ""))
+        if (e.all { it is PsiReference }) {
+            return show(KUsagesResult(e.filterIsInstance<PsiReference>().map { it.element!! }, ""))
         }
         if (e.all { it is KResult }) {
             return e.forEach { show(it as KResult) }
@@ -162,7 +162,7 @@ fun show(o: Any?) {
     }
 }
 
-fun show(u: UsageInfo) {
+fun show(u: PsiReference) {
     show(u.element!!)
 }
 
