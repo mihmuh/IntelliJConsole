@@ -25,21 +25,6 @@ fun classes(name: String, scope: GlobalSearchScope = GlobalSearchScope.projectSc
 
 fun cls(name: String): PsiClass? = classes(name).filterNotNull().firstOrNull()
 
-class SearchResult {
-    val psiElements:List<PsiElement>
-    val query:String
-
-    constructor(psiElements: List<PsiElement>, query: String) {
-        this.psiElements = psiElements
-        this.query = query
-    }
-
-    fun showUsages():KUsagesResult<PsiElement>{
-        return KUsagesResult(psiElements, query)
-    }
-
-}
-
 fun methods(classAndMethod: String): List<PsiMethod> {
     val i = classAndMethod.lastIndexOf(".")
     assert(i != -1);

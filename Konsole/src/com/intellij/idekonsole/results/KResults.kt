@@ -2,14 +2,17 @@ package com.intellij.idekonsole.results
 
 import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import java.awt.Color
+import java.awt.Font
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.swing.JComponent
@@ -70,21 +73,43 @@ class KErrorResult(val error: String) : KResult {
 class KUsagesResult<T : PsiElement>(val elements: List<T?>, val searchQuery: String, r: ((T) -> Unit)? = null) : KResult {
     val panel: JComponent
     val refactoring: ((T) -> Unit)? = r
+    lateinit var label: JBLabel
+    lateinit var mouseAdapter: MouseListener
 
     init {
-        val prefix = JBLabel("")
-        val label = JBLabel("" + elements.size + " elements found")
-        label.foreground = Color.BLUE;
-        val project = project()
-        //todo one node should be shown as a ref
-        if (project != null) {
-            label.addMouseListener(object : MouseAdapter() {
-                override fun mouseClicked(e: MouseEvent?) {
-                    KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery, refactoring)
-                }
-            })
+        val prefix = JBLabel(">")
+        var elementsString = "" + elements.size + " element"
+        if (elements.size > 1) elementsString += "s"
+        if (refactoring != null) {
+            elementsString = "Refactor " + elementsString
         }
+        label = JBLabel(elementsString)
+        label.foreground = Color.BLUE;
+
+        //todo one node should be shown as a ref
+        mouseAdapter = object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                openUsagesView()
+            }
+        }
+        label.addMouseListener(mouseAdapter)
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
+    }
+
+    fun openUsagesView() {
+        val project = project()
+        if (project != null) {
+            if (refactoring != null) {
+                KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery, refactoring, Runnable {
+                    label.removeMouseListener(mouseAdapter)
+                    label.foreground = Color.GRAY
+                    label.font = Font(label.font.name, Font.ITALIC, label.font.size)
+                })
+            } else {
+                KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery)
+
+            }
+        }
     }
 
     constructor (element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null) : this(listOf(element), searchQuery, refactoring)
@@ -118,7 +143,7 @@ class KExceptionResult(val t: Throwable) : KResult {
         panel.background = null
     }
 
-    fun underlineAndHighlight(s: String?, foreground:Color, background:Color): String {
+    fun underlineAndHighlight(s: String?, foreground: Color, background: Color): String {
         if (s == null) {
             return ""
         }

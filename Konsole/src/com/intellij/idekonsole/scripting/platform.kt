@@ -116,11 +116,15 @@ fun show(vararg e: PsiElement) {
     show(e.toList())
 }
 
+private val EMPTY_SEQ = "Empty sequence"
+
 fun <T:PsiElement> show(refactoring: Refactoring<T>){
     if (refactoring.elements.isNotEmpty()) {
-       return show(KUsagesResult(refactoring.elements, "", refactoring.refactoring))
+        val result = KUsagesResult(refactoring.elements, "", refactoring.refactoring)
+        result.openUsagesView()
+        return show(result)
     }
-    show("No elements found")
+    show(EMPTY_SEQ)
 }
 
 fun show(e: List<Any?>) {
@@ -135,7 +139,7 @@ fun show(e: List<Any?>) {
             return e.forEach { show(it as KResult) }
         }
     }
-    show(e.toString())
+    show(EMPTY_SEQ)
 }
 
 fun show(f: () -> Any?) {
