@@ -68,8 +68,7 @@ object KTemplates {
 
         val className = qualifiedName.removePrefix("com.intellij.psi.")
         if (className.contains(".")) return
-        val varName = "`$$className`"
 
-        sb.append("val $varName = PsiClassRef($qualifiedName::class.java)\n")
+        sb.append("val $className = PsiClassRef($qualifiedName::class.java)\n")
     }
 }
