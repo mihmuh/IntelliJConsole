@@ -48,8 +48,8 @@ fun nodes() : Stream<PsiElement> {
 }
 
 fun PsiElement.descendants() : Stream<PsiElement> {
-    return this.children.toList().stream()
-            .flatMap { it.descendants() }
+    return Stream.concat(Stream.of(this), this.children.toList().stream()
+            .flatMap { it.descendants() })
 }
 
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
