@@ -23,19 +23,15 @@ object KTemplates {
 
             fun main_exec(){
             show({
-                ${BLOCK}
-                ${NOFOLD_START}${CARET}${NOFOLD_END}
-                ${BLOCK}
+                ${BLOCK}${NOFOLD_START}${CARET}                                            ${NOFOLD_END}${BLOCK}
             })
-            }
-
-            """.trimIndent()
+            }""".trimIndent()
 
 
-    fun getConsoleContent() = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "")
-    fun getConsoleCaretOffset() = CONSOLE_CONTENT.replace(BLOCK, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "").indexOf(CARET)
-    fun getConsoleFoldingStart() = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_END, "").indexOf(NOFOLD_START)
-    fun getConsoleFoldingEnd() = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").indexOf(NOFOLD_END)
+    val consoleContent = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "")
+    val consoleCaretOffset = CONSOLE_CONTENT.replace(BLOCK, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "").indexOf(CARET)
+    val consoleFoldingStart = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_END, "").indexOf(NOFOLD_START)
+    val consoleFoldingEnd = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").indexOf(NOFOLD_END)
     fun getConsoleBlocks():List<Int> {
         val onlyBlock = CONSOLE_CONTENT.replace(CARET, "").replace(NOFOLD_END, "").replace(NOFOLD_START, "")
         val b1 = onlyBlock.indexOf(BLOCK)

@@ -37,8 +37,6 @@ class KEditor(val project: Project) : Disposable {
     private val editor: EditorEx
     private val scrollPane: JScrollPane
 
-    private var textMarker: RangeMarker? = null
-
     init {
         module = KIdeaModuleBuilder.createModule(project)
 
@@ -64,19 +62,11 @@ class KEditor(val project: Project) : Disposable {
 
     private fun resetInputContent() {
         write {
-            val content = KTemplates.getConsoleContent()
-            val caretOffset = KTemplates.getConsoleCaretOffset()
-            val foldingStart = KTemplates.getConsoleFoldingStart()
-            val foldingEnd = KTemplates.getConsoleFoldingEnd()
+            inputDocument.setText(KTemplates.consoleContent)
 
-
-            inputDocument.setText(content)
-
-            textMarker = inputDocument.createRangeMarker(foldingStart, foldingEnd)
-
-            for (b in KTemplates.getConsoleBlocks()) {
-                inputDocument.createGuardedBlock(b - 1, b)
-            }
+            val blocks = KTemplates.getConsoleBlocks()
+            inputDocument.createGuardedBlock(0, blocks[0])
+            inputDocument.createGuardedBlock(blocks[1], KTemplates.consoleContent.length)
 
             val fModel = editor.foldingModel
             fModel.runBatchFoldingOperation({
@@ -86,38 +76,34 @@ class KEditor(val project: Project) : Disposable {
                 }
 
                 val fGroup = FoldingGroup.newGroup("one")
-                val region1 = fModel.createFoldRegion(0, foldingStart, "> ", fGroup, false)
+                val region1 = fModel.createFoldRegion(0, KTemplates.consoleFoldingStart, "> ", fGroup, false)
                 fModel.addFoldRegion(region1!!)
-                val region2 = fModel.createFoldRegion(foldingEnd, inputDocument.textLength, "", fGroup, false)
+                val region2 = fModel.createFoldRegion(KTemplates.consoleFoldingEnd, inputDocument.textLength, "<", fGroup, false)
                 fModel.addFoldRegion(region2!!)
 
                 region1.isExpanded = false
                 region2.isExpanded = false
             })
 
-            editor.caretModel.moveToOffset(caretOffset)
+            editor.caretModel.moveToOffset(KTemplates.consoleCaretOffset)
         }
     }
 
     fun handleCommand() {
         if (containsErrors()) return
 
-
         val text = inputDocument.text
         KSettings.instance.appendConsoleHistory(text)
 
-        val marker = textMarker
-        val commandText = if (marker != null && marker.isValid) {
-            text.substring(marker.startOffset, marker.endOffset)
-        } else {
-            text
-        }
+        val commandText = text.substring(KTemplates.consoleFoldingStart, text.length - KTemplates.consoleContent.length + KTemplates.consoleFoldingStart)
+
         viewer.add(KCommandResult(commandText))
         val callback = KCommandHandler.compile(module, this)
         callback.doWhenDone(Runnable {
             ApplicationManager.getApplication().invokeLater {
                 try {
                     callback.result.compute()
+                    resetInputContent();
                 } catch (e: Exception) {
                     viewer.add(KExceptionResult(e))
                 }
