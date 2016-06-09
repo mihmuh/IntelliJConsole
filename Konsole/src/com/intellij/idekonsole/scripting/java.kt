@@ -42,7 +42,7 @@ fun meth(classAndMethod: String): PsiMethod? {
 }
 
 fun Project.topPackages(): List<PsiPackage> {
-    return this.modules().map { it.topPackage() }.filterNotNull()
+    return this.modules().map { it.topPackage() }.filterNotNull().distinct()
 }
 
 fun Project.packages(): List<PsiPackage> {
