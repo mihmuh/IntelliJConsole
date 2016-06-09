@@ -63,7 +63,7 @@ class KErrorResult(val error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KPsiElementsResult(val elements: List<PsiElement>) : KResult {
+class KPsiElementsResult(val elements: List<PsiElement?>) : KResult {
     val panel: JComponent
 
 
@@ -76,15 +76,15 @@ class KPsiElementsResult(val elements: List<PsiElement>) : KResult {
         if (project != null) {
             label.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
-                    UsagesPresentation(project).showUsages(elements)
+                    UsagesPresentation(project).showUsages(elements.filterNotNull())
                 }
             })
         }
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
     }
 
-    constructor (element: PsiElement):this(listOf(element))
-    constructor (vararg element: PsiElement):this(element.toList())
+    constructor (element: PsiElement?):this(listOf(element))
+    constructor (vararg element: PsiElement?):this(element.toList())
 
     override fun getPresentation(): JComponent = panel
 }
