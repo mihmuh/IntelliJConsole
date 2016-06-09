@@ -1,6 +1,7 @@
 package com.intellij.idekonsole
 
 import com.intellij.idekonsole.results.KResult
+import com.intellij.openapi.application.Application
 import com.intellij.openapi.compiler.CompilerManager
 import com.intellij.openapi.compiler.CompilerPaths
 import com.intellij.openapi.diagnostic.Logger
@@ -8,6 +9,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.util.AsyncResult
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.util.ExceptionUtil
 import java.net.URL
 import java.net.URLClassLoader
@@ -21,7 +23,7 @@ object KCommandHandler {
         CompilerManager.getInstance(module.project).compile(module, { aborted, errors, warnings, compileContext ->
             val outputPath = CompilerPaths.getModuleOutputPath(module, false)
             val url = URL("file://$outputPath/")
-            val classloader = URLClassLoader(arrayOf(url), AllPluginsClassLoader.INSTANCE)
+            val classloader = URLClassLoader(arrayOf(url), AllClassesClassLoader(VirtualFileSystem::class.java.classLoader))
             val clazz = classloader.loadClass("konsole.runtime.TestKt");
 
             KDataHolder.project = module.project
