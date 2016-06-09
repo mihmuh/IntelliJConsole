@@ -2,6 +2,8 @@ package com.intellij.idekonsole
 
 import com.intellij.ide.ui.AntialiasingType
 import com.intellij.idekonsole.results.KCommandResult
+import com.intellij.idekonsole.results.KErrorResult
+import com.intellij.idekonsole.results.KExceptionResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.lang.Language
 import com.intellij.openapi.Disposable
@@ -13,24 +15,22 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileTypes.LanguageFileType
-import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.JBColor
+import com.intellij.ui.JBSplitter
 import com.intellij.ui.ScrollPaneFactory
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import sun.swing.SwingUtilities2
-import java.awt.BorderLayout
 import java.awt.Dimension
 import java.util.*
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 
 class KEditor(val project: Project) : Disposable {
-    val component: JPanel
+    val splitter: JBSplitter
 
     private val inputFile: VirtualFile
     private val inputDocument: Document
@@ -53,18 +53,14 @@ class KEditor(val project: Project) : Disposable {
         resetInputContent()
 
         scrollPane = ScrollPaneFactory.createScrollPane(viewer)
-        component = JPanel(BorderLayout())
-        component.add(scrollPane, BorderLayout.CENTER)
-        component.add(editor.component, BorderLayout.SOUTH)
+        splitter = JBSplitter(true)
+        splitter.setHonorComponentsMinimumSize(false)
+        splitter.firstComponent = scrollPane
+        splitter.secondComponent = editor.component
 
         object : DumbAwareAction() {
             override fun actionPerformed(event: AnActionEvent?) {
                 handleCommand(inputDocument.text)
-
-                resetInputContent()
-
-                scrollPane.validate()
-                scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
             }
         }.registerCustomShortcutSet(CommonShortcuts.CTRL_ENTER, editor.component)
     }
@@ -80,19 +76,19 @@ class KEditor(val project: Project) : Disposable {
 
             inputDocument.setText(content)
 
-            inputDocument.createGuardedBlock(0, offset)
-            inputDocument.createGuardedBlock(offset + 1, inputDocument.textLength)
+            //            inputDocument.createGuardedBlock(0, offset)
+            //            inputDocument.createGuardedBlock(offset + 1, inputDocument.textLength)
 
             editor.foldingModel.runBatchFoldingOperation({
-                val regions = editor.foldingModel.allFoldRegions
-                for (region in regions) {
-                    editor.foldingModel.removeFoldRegion(region)
-                }
-
-                val region1 = editor.foldingModel.addFoldRegion(0, offset, "")
-                val region2 = editor.foldingModel.addFoldRegion(offset + 1, inputDocument.textLength, "")
-                region1?.isExpanded = false
-                region2?.isExpanded = false
+                //                val regions = editor.foldingModel.allFoldRegions
+                //                for (region in regions) {
+                //                    editor.foldingModel.removeFoldRegion(region)
+                //                }
+                //
+                //                val region1 = editor.foldingModel.addFoldRegion(0, offset, "")
+                //                val region2 = editor.foldingModel.addFoldRegion(offset + 1, inputDocument.textLength, "")
+                //                region1?.isExpanded = false
+                //                region2?.isExpanded = false
             })
 
             editor.caretModel.moveToOffset(offset)
@@ -101,7 +97,21 @@ class KEditor(val project: Project) : Disposable {
 
     fun handleCommand(text: String) {
         viewer.add(KCommandResult(text))
-        viewer.add(KCommandHandler.handle(text, project))
+        val callback = KCommandHandler.compile(KIdeaModuleBuilder.createModule(project), inputFile)
+        callback.doWhenDone(Runnable {
+            ApplicationManager.getApplication().invokeLater {
+                try {
+                    viewer.add(callback.result.compute())
+                } catch (e: Exception) {
+                    viewer.add(KExceptionResult(project, e))
+                }
+
+                resetInputContent()
+
+                scrollPane.validate()
+                scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
+            }
+        })
     }
 
     override fun dispose() {

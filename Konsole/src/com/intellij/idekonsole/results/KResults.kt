@@ -44,18 +44,15 @@ class KStdoutResult(val text: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KErrorResult(val err: Exception) : KResult {
+class KErrorResult(val error: String) : KResult {
     val panel: JComponent
 
     init {
-        LOG.warn(err)
+        LOG.warn(error)
 
         val prefix = JBLabel("ERROR: ")
 
-        val message = err.message.toString()
-        val classname = err.javaClass.name
-
-        val label = JBLabel("[$classname] $message").setCopyable(true)
+        val label = JBLabel(error).setCopyable(true)
         label.foreground = JBColor.RED
 
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
@@ -83,7 +80,7 @@ class KPsiElementsResult(val elements: List<PsiElement>) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KExceptionResult(val t: Throwable, val project: Project) : KResult {
+class KExceptionResult(val project: Project, val t: Throwable) : KResult {
     val panel: JComponent
 
     init {

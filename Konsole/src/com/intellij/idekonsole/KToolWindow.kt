@@ -39,7 +39,7 @@ class KToolWindow(val project: Project) : JPanel(), Disposable {
 
             Disposer.register(this, editor)
 
-            add(editor.component, BorderLayout.CENTER)
+            add(editor.splitter, BorderLayout.CENTER)
         } catch(e: Exception) {
             LOG.error(e)
         }

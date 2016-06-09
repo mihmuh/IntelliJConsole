@@ -15,7 +15,6 @@ import com.intellij.openapi.roots.ModuleRootModificationUtil
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
 import com.intellij.openapi.util.Computable
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
@@ -28,9 +27,15 @@ object KIdeaModuleBuilder {
         val module = createModule(project)
         configureModule(project, module)
 
-        val sourceDir = getSourceDir(module)
-        val tempFile = FileUtil.createTempFile(VfsUtil.virtualToIoFile(sourceDir), "konsole", ".kt", true, true)
-        return VfsUtil.findFileByIoFile(tempFile, true)!!
+
+        val dir = VfsUtil.virtualToIoFile(getSourceDir(module))
+        val file = File(dir, "Test.kt")
+
+        if (!file.exists()) {
+            file.createNewFile()
+        }
+
+        return VfsUtil.findFileByIoFile(file, true)!!
     }
 
     private fun getSourceDir(module: Module): VirtualFile {
@@ -96,10 +101,13 @@ object KIdeaModuleBuilder {
             val libraryModel = newLibrary.modifiableModel
 
             val ideaLibraries = VfsUtil.getUrlForLibraryRoot(File(PathManager.getHomePath()))
-            val pluginLibraries = VfsUtil.getUrlForLibraryRoot(File(PathManager.getPreInstalledPluginsPath()))
+            val pluginLibraries1 = VfsUtil.getUrlForLibraryRoot(File(PathManager.getPreInstalledPluginsPath()))
+            val pluginLibraries2 = VfsUtil.getUrlForLibraryRoot(File(PathManager.getPluginsPath()))
 
             libraryModel.addJarDirectory(ideaLibraries, true)
-            libraryModel.addJarDirectory(pluginLibraries, true)
+            libraryModel.addJarDirectory(pluginLibraries1, true)
+            libraryModel.addJarDirectory(pluginLibraries2, true)
+
             libraryModel.commit()
             moduleManager.modules.forEach {
                 val model = ModuleRootManager.getInstance(it).modifiableModel
