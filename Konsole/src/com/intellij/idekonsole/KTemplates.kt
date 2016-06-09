@@ -7,10 +7,10 @@ object KTemplates {
 
     private val CONSOLE_CONTENT =
             """
-            package konsole.runtime;
+            package com.intellij.idekonsole.runtime;
 
-            import com.intellij.idekonsole.results.KResult
-            import com.intellij.idekonsole.results.KStdoutResult
+            import com.intellij.idekonsole.results.*
+            import com.intellij.idekonsole.runtime.*
 
             ${FOLDING_START}fun main_exec(): KResult {
                 ${CARET}return KStdoutResult("Hello World")

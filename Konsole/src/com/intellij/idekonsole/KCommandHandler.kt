@@ -24,7 +24,7 @@ object KCommandHandler {
             val outputPath = CompilerPaths.getModuleOutputPath(module, false)
             val url = URL("file://$outputPath/")
             val classloader = URLClassLoader(arrayOf(url), AllClassesClassLoader(VirtualFileSystem::class.java.classLoader))
-            val clazz = classloader.loadClass("konsole.runtime.TestKt");
+            val clazz = classloader.loadClass("com.intellij.idekonsole.runtime.TestKt");
 
             KDataHolder.project = module.project
             KDataHolder.editor = editor

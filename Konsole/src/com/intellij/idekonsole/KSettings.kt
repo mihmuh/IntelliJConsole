@@ -15,7 +15,7 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
         val MODULE_NAME = "KONSOLE_MODULE"
 
         val FILE_NAME =
-                "konsole/runtime/Test.kt";
+                "com/intellij/idekonsole/runtime/Test.kt";
     }
 
     var data = Data()
