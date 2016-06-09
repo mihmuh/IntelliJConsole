@@ -7,7 +7,7 @@ import com.intellij.openapi.editor.actions.ContentChooser
 import com.intellij.openapi.project.DumbAwareAction
 import java.util.*
 
-class ClearOutputAction : DumbAwareAction("Clear Output", null, AllIcons.General.Remove) {
+class ClearOutputAction : DumbAwareAction("Clear Output", null, AllIcons.Actions.Clean) {
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabled = e.getData(KDataKeys.K_EDITOR) != null
     }
@@ -18,7 +18,7 @@ class ClearOutputAction : DumbAwareAction("Clear Output", null, AllIcons.General
     }
 }
 
-class ExecuteAction : DumbAwareAction("Execute", null, AllIcons.Actions.Rerun) {
+class ExecuteAction : DumbAwareAction("Run", null, AllIcons.General.Run) {
     override fun update(e: AnActionEvent) {
         val editor = e.getData(KDataKeys.K_EDITOR)
         e.presentation.isEnabled = e.place == ActionPlaces.MAIN_MENU ||
