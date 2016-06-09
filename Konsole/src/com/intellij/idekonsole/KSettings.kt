@@ -14,24 +14,8 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
         val LIB_NAME = "KONSOLE_LIB"
         val MODULE_NAME = "KONSOLE_MODULE"
 
-        val PLACEHOLDER = "{PLACEHOLDER}"
-
         val FILE_NAME =
                 "konsole/runtime/Test.kt";
-
-        // FIXME
-        val INITIAL_CONTENT =
-                """
-                package konsole.runtime;
-
-                import com.intellij.idekonsole.results.*
-                import com.intellij.idekonsole.scripting.*
-
-                fun main_exec(): KResult {
-                    // code here
-                    return KStdoutResult("Hello World")
-                }
-                """.trimIndent()
     }
 
     var data = Data()

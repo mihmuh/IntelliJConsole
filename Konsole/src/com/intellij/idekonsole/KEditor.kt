@@ -72,8 +72,11 @@ class KEditor(val project: Project) : Disposable {
 
     private fun resetInputContent() {
         write {
-            val offset = KSettings.INITIAL_CONTENT.indexOf(KSettings.PLACEHOLDER)
-            val content = KSettings.INITIAL_CONTENT.replace(KSettings.PLACEHOLDER, "\n")
+            val content = KTemplates.getConsoleContent()
+            val caretOffset = KTemplates.getConsoleCaretOffset()
+            val foldingStart = KTemplates.getConsoleFoldingStart()
+            val foldingEnd = KTemplates.getConsoleFoldingEnd()
+
 
             inputDocument.setText(content)
 
@@ -81,18 +84,18 @@ class KEditor(val project: Project) : Disposable {
             //            inputDocument.createGuardedBlock(offset + 1, inputDocument.textLength)
 
             editor.foldingModel.runBatchFoldingOperation({
-                //                val regions = editor.foldingModel.allFoldRegions
-                //                for (region in regions) {
-                //                    editor.foldingModel.removeFoldRegion(region)
-                //                }
-                //
-                //                val region1 = editor.foldingModel.addFoldRegion(0, offset, "")
-                //                val region2 = editor.foldingModel.addFoldRegion(offset + 1, inputDocument.textLength, "")
-                //                region1?.isExpanded = false
-                //                region2?.isExpanded = false
+                val regions = editor.foldingModel.allFoldRegions
+                for (region in regions) {
+                    editor.foldingModel.removeFoldRegion(region)
+                }
+
+                val region1 = editor.foldingModel.addFoldRegion(0, foldingStart, "")
+                val region2 = editor.foldingModel.addFoldRegion(foldingEnd, inputDocument.textLength, "")
+                region1?.isExpanded = false
+                region2?.isExpanded = false
             })
 
-            editor.caretModel.moveToOffset(offset)
+            editor.caretModel.moveToOffset(caretOffset)
         }
     }
 
@@ -107,8 +110,6 @@ class KEditor(val project: Project) : Disposable {
                 } catch (e: Exception) {
                     viewer.add(KExceptionResult(e))
                 }
-
-//                resetInputContent()
 
                 scrollPane.validate()
                 scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
