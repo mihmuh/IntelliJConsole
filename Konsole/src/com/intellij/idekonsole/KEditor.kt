@@ -76,9 +76,9 @@ class KEditor(val project: Project) : Disposable {
                 }
 
                 val fGroup = FoldingGroup.newGroup("one")
-                val region1 = fModel.createFoldRegion(0, KTemplates.consoleFoldingStart, "> ", fGroup, false)
+                val region1 = fModel.createFoldRegion(0, KTemplates.consoleFolding1End, "> ", fGroup, false)
                 fModel.addFoldRegion(region1!!)
-                val region2 = fModel.createFoldRegion(KTemplates.consoleFoldingEnd, inputDocument.textLength, "", fGroup, false)
+                val region2 = fModel.createFoldRegion(KTemplates.consoleFolding2Start, inputDocument.textLength, "", fGroup, false)
                 fModel.addFoldRegion(region2!!)
 
                 region1.isExpanded = false
@@ -95,7 +95,7 @@ class KEditor(val project: Project) : Disposable {
         val text = inputDocument.text
         KSettings.instance.appendConsoleHistory(text)
 
-        val commandText = text.substring(KTemplates.consoleFoldingStart, text.length - KTemplates.consoleContent.length + KTemplates.consoleFoldingStart)
+        val commandText = text.substring(KTemplates.consoleFolding1End, text.length - KTemplates.consoleContent.length + KTemplates.consoleFolding2Start + 1)
 
         val callback = KCommandHandler.compile(module, this)
         callback.doWhenDone(Runnable {

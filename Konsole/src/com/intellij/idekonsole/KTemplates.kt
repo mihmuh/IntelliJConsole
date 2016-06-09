@@ -8,10 +8,7 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 
 object KTemplates {
-    private val CARET = "{CARET}"
-    private val BLOCK = "{BLOCK}"
-    private val NOFOLD_START = "{FOLDING_START}"
-    private val NOFOLD_END = "{FOLDING_END}"
+    private val COMMAND = "{COMMAND}"
 
     private val CONSOLE_CONTENT =
             """
@@ -23,20 +20,17 @@ object KTemplates {
 
             fun main_exec(){
             show({
-                ${BLOCK} ${NOFOLD_START}${CARET}${NOFOLD_END} ${BLOCK}
+                ${COMMAND}
             })
             }""".trimIndent()
 
 
-    val consoleContent = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "")
-    val consoleCaretOffset = CONSOLE_CONTENT.replace(BLOCK, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "").indexOf(CARET)
-    val consoleFoldingStart = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_END, "").indexOf(NOFOLD_START)
-    val consoleFoldingEnd = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").indexOf(NOFOLD_END)
-    fun getConsoleBlocks():List<Int> {
-        val onlyBlock = CONSOLE_CONTENT.replace(CARET, "").replace(NOFOLD_END, "").replace(NOFOLD_START, "")
-        val b1 = onlyBlock.indexOf(BLOCK)
-        val b2 = onlyBlock.replaceFirst(BLOCK, "").indexOf(BLOCK)
-        return listOf(b1,b2)
+    val consoleContent = CONSOLE_CONTENT.replace(COMMAND, "")
+    val consoleCaretOffset = CONSOLE_CONTENT.indexOf(COMMAND)
+    val consoleFolding1End = consoleCaretOffset - 1
+    val consoleFolding2Start = consoleCaretOffset + 1
+    fun getConsoleBlocks(): List<Int> {
+        return listOf(consoleFolding1End, consoleFolding2Start)
     }
 
     fun initHelperClasses(module: Module) {
