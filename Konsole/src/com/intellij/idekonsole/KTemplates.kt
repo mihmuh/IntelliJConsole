@@ -20,9 +20,9 @@ object KTemplates {
             import com.intellij.idekonsole.runtime.*
             import com.intellij.idekonsole.scripting.*
 
-            ${FOLDING_START}fun main_exec(): KResult? {
-                ${CARET}return KStdoutResult("Hello World")
-            }${FOLDING_END}
+            fun main_exec(){
+              ${FOLDING_START}${CARET}${FOLDING_END}
+            }
 
             """.trimIndent()
 
