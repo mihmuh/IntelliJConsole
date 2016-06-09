@@ -23,7 +23,7 @@ object KTemplates {
 
             fun main_exec(){
             show({
-                ${BLOCK}${NOFOLD_START}${CARET}${NOFOLD_END}${BLOCK}
+                ${BLOCK} ${NOFOLD_START}${CARET}${NOFOLD_END} ${BLOCK}
             })
             }""".trimIndent()
 
