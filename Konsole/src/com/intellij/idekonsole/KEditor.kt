@@ -2,7 +2,6 @@ package com.intellij.idekonsole
 
 import com.intellij.ide.ui.AntialiasingType
 import com.intellij.idekonsole.results.KCommandResult
-import com.intellij.idekonsole.results.KErrorResult
 import com.intellij.idekonsole.results.KExceptionResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.lang.Language
@@ -103,7 +102,7 @@ class KEditor(val project: Project) : Disposable {
                 try {
                     viewer.add(callback.result.compute())
                 } catch (e: Exception) {
-                    viewer.add(KExceptionResult(project, e))
+                    viewer.add(KExceptionResult(e))
                 }
 
                 resetInputContent()

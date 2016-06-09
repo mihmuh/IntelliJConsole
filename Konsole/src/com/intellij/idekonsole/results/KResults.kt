@@ -1,5 +1,6 @@
 package com.intellij.idekonsole.results
 
+import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
@@ -65,22 +66,26 @@ class KErrorResult(val error: String) : KResult {
 class KPsiElementsResult(val elements: List<PsiElement>) : KResult {
     val panel: JComponent
 
+
     init {
         val prefix = JBLabel("")
         val label = JBLabel("Show Usages")
         label.foreground = Color.BLUE;
-        label.addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent?) {
-                JOptionPane.showMessageDialog(label.parent, "usages")
-            }
-        })
+        val project = project()
+        if (project != null) {
+            label.addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent?) {
+                    UsagesPresentation(project).showUsages(elements)
+                }
+            })
+        }
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
     }
 
     override fun getPresentation(): JComponent = panel
 }
 
-class KExceptionResult(val project: Project, val t: Throwable) : KResult {
+class KExceptionResult(val t: Throwable) : KResult {
     val panel: JComponent
 
     init {
@@ -88,14 +93,18 @@ class KExceptionResult(val project: Project, val t: Throwable) : KResult {
         val label = JBLabel(t.javaClass.name)
         label.background = Color.PINK
         label.foreground = Color.BLUE
-        val writer:StringWriter = StringWriter();
+        val writer: StringWriter = StringWriter();
         t.printStackTrace(PrintWriter(writer));
-        label.addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent?) {
-                val dialog: MyAnalyzeStacktraceDialog = MyAnalyzeStacktraceDialog(project, writer.toString())
-                dialog.show()
-            }
-        })
+        val project = project()
+        if (project != null) {
+            label.addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent?) {
+                    val dialog: MyAnalyzeStacktraceDialog = MyAnalyzeStacktraceDialog(project, writer.toString())
+                    dialog.show()
+                }
+            })
+        }
+
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
     }
 
