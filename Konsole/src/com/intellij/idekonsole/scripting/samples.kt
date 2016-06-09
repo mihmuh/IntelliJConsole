@@ -4,4 +4,9 @@ package com.intellij.idekonsole.scripting
  * Created by Mihail.Buryakov on 6/9/2016.
  */
 
-//show(instances(PsiBinaryExpression).filter { it.operationTokenType.hasValue(JavaTokenType.EQEQ) && it.lOperand.type!!.isAssignableFrom("java.lang.String".asType()) })
+/*
+
+instances(PsiBinaryExpression).filter { it.operationTokenType.hasValue(EQEQ) && it.rOperand!!.hasType("String") }
+            .refactor { it.replace("${it.lOperand.text}.equals(${it.rOperand!!.text})".asExpression()) }
+
+ */

@@ -62,6 +62,8 @@ fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
     show(Refactoring(this, refactoring))
 }
 
+fun <T : PsiElement> Stream<T>.refactor(refactoring: (T) -> Unit) = toList().refactor(refactoring)
+
 //------------ project structure navigation
 
 //todo make for-internal-use
