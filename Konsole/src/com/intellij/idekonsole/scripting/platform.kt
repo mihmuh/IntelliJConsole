@@ -84,8 +84,16 @@ fun show(vararg e : PsiElement) {
     show(e.toList())
 }
 
-fun show(e : List<PsiElement>) {
-    show(KPsiElementsResult(e))
+fun show(e : List<Any>) {
+    if (e.isNotEmpty()) {
+        if (e.all { it is PsiElement }) {
+            return show(KPsiElementsResult(e.filterIsInstance<PsiElement>()))
+        }
+        if (e.all { it is UsageInfo }) {
+            return show(KPsiElementsResult(e.filterIsInstance<UsageInfo>().map { it.element!! }))
+        }
+    }
+    show(e.toString())
 }
 
 fun show(o : Any) {
