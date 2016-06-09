@@ -13,6 +13,7 @@ import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.psi.search.SearchScope
+import com.intellij.psi.search.searches.ClassInheritorsSearch
 import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
 
@@ -91,7 +92,9 @@ fun String.asType(): PsiType = this.asTypeElement().type;
 
 fun String.asExpression(): PsiExpression = parserFacade().createExpressionFromText(this, context());
 
-//fun PsiClass.desce
+fun PsiClass.inheritors(): List<PsiClass>{
+    return ClassInheritorsSearch.search(this).toList();
+}
 
 /*
 * .asPsi(experimantal)
