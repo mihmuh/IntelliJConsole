@@ -2,7 +2,7 @@ package com.intellij.idekonsole.results
 
 import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
@@ -13,15 +13,19 @@ import java.awt.event.MouseEvent
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.swing.JComponent
-import javax.swing.JOptionPane
 
 private val LOG = Logger.getInstance(KResult::class.java)
+
+private fun createLabel(text: String): JBLabel {
+    val content = StringUtil.escapeXml(text).replace("\n", "<br>").replace(" ", "&nbsp;")
+    return JBLabel(content).setCopyable(true)
+}
 
 class KCommandResult(val text: String) : KResult {
     val panel: JComponent
 
     init {
-        val label = JBLabel(text).setCopyable(true)
+        val label = createLabel(text)
         label.foreground = JBColor.GREEN.darker()
 
         panel = label
@@ -35,7 +39,7 @@ class KStdoutResult(val text: String) : KResult {
 
     init {
         val prefix = JBLabel("> ")
-        val label = JBLabel(text).setCopyable(true)
+        val label = createLabel(text)
         label.foreground = JBColor.BLACK
 
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
@@ -53,7 +57,7 @@ class KErrorResult(val error: String) : KResult {
 
         val prefix = JBLabel("ERROR: ")
 
-        val label = JBLabel(error).setCopyable(true)
+        val label = createLabel(error)
         label.foreground = JBColor.RED
 
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
@@ -65,7 +69,6 @@ class KErrorResult(val error: String) : KResult {
 
 class KPsiElementsResult(val elements: List<PsiElement?>) : KResult {
     val panel: JComponent
-
 
     init {
         val prefix = JBLabel("")
