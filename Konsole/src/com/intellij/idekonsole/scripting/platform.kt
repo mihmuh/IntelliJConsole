@@ -11,9 +11,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
-import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.SearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
 import com.intellij.util.CommonProcessors
@@ -22,7 +20,7 @@ import java.util.stream.Stream
 
 //----------- find, refactor
 
-fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project())): List<PsiReference> {
+fun usages(node: PsiElement, scope: GlobalSearchScope? = GlobalSearchScope.projectScope(project()!!)): List<PsiReference> {
     val project = project();
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false);
     val processor = CommonProcessors.CollectProcessor<UsageInfo>()
@@ -35,17 +33,17 @@ fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project
     return processor.getResults().map { it.reference }.filterNotNull();
 }
 
-fun <T : PsiElement> instances(cls: PsiClassRef<T>): Stream<T> {
-    return nodes().withKind(cls)
+fun <T : PsiElement> instances(cls: PsiClassRef<T>, scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): Stream<T> {
+    return nodes(scope).withKind(cls)
 }
 
 fun <T> List<T>.stream() = J8Util.stream(this);
 fun <T> Stream<T>.toList() : List<T> = collect(Collectors.toList<T>())
 
-fun nodes(): Stream<PsiElement> {
+fun nodes(scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): Stream<PsiElement> {
     val project = project()
     return project!!.packages().stream()
-            .flatMap { it.getFiles(GlobalSearchScope.projectScope(project)).map { it!! }.stream() }
+            .flatMap { it.roots(scope).stream() }
             .flatMap { it.descendants() }.filter { it !is PsiWhiteSpace }
 }
 
@@ -80,7 +78,7 @@ fun Project.modules(): List<Module> {
     return ModuleManager.getInstance(this).modules.filterNotNull().toList();
 }
 
-fun PsiPackage.roots(scope: GlobalSearchScope = EverythingGlobalScope(project())): List<PsiFile> {
+fun PsiPackage.roots(scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): List<PsiFile> {
     val files = this.getFiles(scope);
     if (files == null) return emptyList();
     return files.requireNoNulls().toList();

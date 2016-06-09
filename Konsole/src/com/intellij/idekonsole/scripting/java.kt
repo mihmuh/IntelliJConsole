@@ -6,7 +6,6 @@ import com.intellij.openapi.module.impl.scopes.ModulesScope
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.psi.*
-import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.psi.search.searches.ClassInheritorsSearch
@@ -14,10 +13,10 @@ import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
 import java.util.stream.Stream
 
-fun classes(name: String): List<PsiClass?> {
+fun classes(name: String, scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): List<PsiClass?> {
     val p = project()
     val sn = PsiNameHelper.getShortClassName(name)
-    val candidates = PsiShortNamesCache.getInstance(project()).getClassesByName(sn, EverythingGlobalScope(p))
+    val candidates = PsiShortNamesCache.getInstance(project()).getClassesByName(sn, scope)
     return candidates.filter {
         val qname = it.qualifiedName
         qname != null && qname.endsWith(name)
