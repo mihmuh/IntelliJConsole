@@ -81,7 +81,6 @@ object KIdeaModuleBuilder {
     }
 
     private fun createIdeLibrary(project: Project): Library {
-        val moduleManager = ModuleManager.getInstance(project)
         val libraryTable = LibraryTablesRegistrar.getInstance().getLibraryTable(project)
         val library = libraryTable.getLibraryByName(KSettings.LIB_NAME)
         if (library != null) return library
@@ -99,11 +98,6 @@ object KIdeaModuleBuilder {
             libraryModel.addJarDirectory(pluginLibraries2, true)
 
             libraryModel.commit()
-            moduleManager.modules.forEach {
-                val model = ModuleRootManager.getInstance(it).modifiableModel
-                model.addLibraryEntry(newLibrary)
-                model.commit()
-            }
 
             return@Computable newLibrary
         })
