@@ -24,8 +24,8 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
                 """
                 package konsole.runtime;
 
-                import com.intellij.idekonsole.results.KResult
-                import com.intellij.idekonsole.results.KStdoutResult
+                import com.intellij.idekonsole.results.*
+                import com.intellij.idekonsole.scripting.*
 
                 fun main_exec(): KResult {
                     // code here
