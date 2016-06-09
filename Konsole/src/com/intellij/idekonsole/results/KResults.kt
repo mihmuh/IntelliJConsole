@@ -25,10 +25,12 @@ class KCommandResult(val text: String) : KResult {
     val panel: JComponent
 
     init {
+        val prefix = JBLabel("> ")
         val label = createLabel(text)
         label.foreground = JBColor.GREEN.darker()
 
-        panel = label
+        panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
+        panel.background = null
     }
 
     override fun getPresentation(): JComponent = panel
@@ -38,12 +40,10 @@ class KStdoutResult(val text: String) : KResult {
     val panel: JComponent
 
     init {
-        val prefix = JBLabel("> ")
         val label = createLabel(text)
         label.foreground = JBColor.BLACK
 
-        panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
-        panel.background = null
+        panel = label
     }
 
     override fun getPresentation(): JComponent = panel
