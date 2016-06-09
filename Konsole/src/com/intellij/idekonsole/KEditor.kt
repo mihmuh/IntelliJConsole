@@ -101,7 +101,7 @@ class KEditor(val project: Project) : Disposable {
 
     fun handleCommand(text: String) {
         viewer.add(KCommandResult(text))
-        viewer.add(KCommandHandler.handle(text))
+        viewer.add(KCommandHandler.handle(text, project))
     }
 
     override fun dispose() {
