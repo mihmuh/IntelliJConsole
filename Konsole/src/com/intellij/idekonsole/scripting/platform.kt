@@ -20,7 +20,7 @@ import com.intellij.util.CommonProcessors
 
 //----------- find, refactor
 
-fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project())): List<PsiReference> {
+fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project())): List<PsiElement> {
     val project = project();
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false);
     val processor = CommonProcessors.CollectProcessor<UsageInfo>()
@@ -30,7 +30,7 @@ fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project
     for (psiElement in psiElements) {
         handler.processElementUsages(psiElement, processor, options)
     }
-    return processor.getResults().map { it.reference }.requireNoNulls();
+    return processor.getResults().map { it.element }.requireNoNulls();
 }
 
 fun <T : PsiElement> instances(cls: PsiClassRef<T>): List<T> {
@@ -88,10 +88,13 @@ fun show(vararg node: PsiElement) {
     show(node.toList())
 }
 
-fun show(nodes: List<PsiElement>) {
-    show(KPsiElementsResult(nodes))
+fun show(nodes: List<PsiReference>) {
+    show(KPsiElementsResult(nodes.map { it.resolve()!! }))
 }
 
+fun show(vararg node: PsiReference) {
+    show(node.toList())
+}
 
 //todo there should be more "print" functions
 
