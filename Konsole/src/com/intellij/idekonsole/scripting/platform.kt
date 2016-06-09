@@ -153,7 +153,7 @@ fun show(u: UsageInfo) {
     show(u.element!!)
 }
 
-fun <T> T.sameAs(e : T) : Boolean {
+fun <T> T.hasValue(e : T) : Boolean {
     return this == e
 }
 
