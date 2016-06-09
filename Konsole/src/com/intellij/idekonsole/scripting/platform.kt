@@ -17,6 +17,7 @@ import com.intellij.psi.search.SearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
 import com.intellij.util.CommonProcessors
+import java.util.stream.Collectors
 import java.util.stream.Stream
 
 //----------- find, refactor
@@ -39,6 +40,7 @@ fun <T : PsiElement> instances(cls: PsiClassRef<T>): Stream<T> {
 }
 
 fun <T> List<T>.stream() = J8Util.stream(this);
+fun <T> Stream<T>.toList() : List<T> = collect(Collectors.toList<T>())
 
 fun nodes(): Stream<PsiElement> {
     val project = project()

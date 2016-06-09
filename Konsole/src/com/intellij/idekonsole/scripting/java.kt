@@ -1,22 +1,18 @@
 package com.intellij.idekonsole.scripting
 
-import com.intellij.ide.util.PackageUtil
 import com.intellij.idekonsole.results.KUsagesResult
-import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.impl.scopes.ModulesScope
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.psi.*
-import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiShortNamesCache
-import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
+import java.util.stream.Stream
 
 fun classes(name: String): List<PsiClass?> {
     val p = project()
@@ -98,13 +94,29 @@ private fun addSubpackages(result: ArrayList<PsiPackage>, psiPackage: PsiPackage
 
 private fun parserFacade() = JavaPsiFacade.getInstance(project()).parserFacade
 
-fun String.asClass(): PsiClass = parserFacade().createClassFromText(this, null);
+fun String.asClass(): PsiClass = parserFacade().createClassFromText(this, null).assertValid();
 
-fun String.asStatement(): PsiStatement = parserFacade().createStatementFromText(this, null);
+fun String.asStatement(): PsiStatement = parserFacade().createStatementFromText(this, null).assertValid();
 
-fun String.asTypeElement(context : PsiElement?): PsiTypeElement = parserFacade().createTypeElementFromText(this, context);
+fun String.asTypeElement(context : PsiElement?): PsiTypeElement = parserFacade().createTypeElementFromText(this, context).assertValid();
 
 fun String.asType(context : PsiElement?): PsiType = asTypeElement(context).type;
+
+fun PsiElement.brokenReferences() : Stream<String> {
+    val myBroken = this.references.asList().stream().filter { it.resolve() == null }.map { it.canonicalText }
+    return Stream.concat(myBroken, children.asList().stream().flatMap { it.brokenReferences() })
+}
+
+class ParsePsiException(message: String) : RuntimeException(message)
+
+fun <T : PsiElement> T.assertValid() : T {
+    val brokenReferences = this.brokenReferences().toList()
+    if (brokenReferences.isNotEmpty()) {
+        val first = brokenReferences.first()
+        throw ParsePsiException("Could not resolve reference `$first`")
+    }
+    return this
+}
 
 fun String.asType(): PsiType = asType(null);
 
