@@ -4,7 +4,7 @@ import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.idekonsole.KDataHolder
 import com.intellij.idekonsole.KEditor
-import com.intellij.idekonsole.results.KPsiElementsResult
+import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.results.KStdoutResult
 import com.intellij.openapi.module.Module
@@ -52,9 +52,12 @@ fun PsiElement.descendants(): Stream<PsiElement> {
             .flatMap { it.descendants() })
 }
 
+class Refactoring<T : PsiElement>(elements: List<T>, refactoring: (T) -> Unit) {
+    val elements: List<T> = elements
+    val refactoring: (T) -> Unit = refactoring
+}
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
-    //todo show in usages view before refactoring
-    this.forEach { refactoring(it); }
+    show(Refactoring(this, refactoring))
 }
 
 //------------ project structure navigation
@@ -107,13 +110,20 @@ fun show(vararg e: PsiElement) {
     show(e.toList())
 }
 
+fun <T:PsiElement> show(refactoring: Refactoring<T>){
+    if (refactoring.elements.isNotEmpty()) {
+       return show(KUsagesResult(refactoring.elements, "", refactoring.refactoring))
+    }
+    show("No elements found")
+}
+
 fun show(e: List<Any>) {
     if (e.isNotEmpty()) {
         if (e.all { it is PsiElement }) {
-            return show(KPsiElementsResult(e.filterIsInstance<PsiElement>()))
+            return show(KUsagesResult(e.filterIsInstance<PsiElement>(), ""))
         }
         if (e.all { it is UsageInfo }) {
-            return show(KPsiElementsResult(e.filterIsInstance<UsageInfo>().map { it.element!! }))
+            return show(KUsagesResult(e.filterIsInstance<UsageInfo>().map { it.element!! }, ""))
         }
         if (e.all { it is KResult }) {
             return e.forEach { show(it as KResult) }

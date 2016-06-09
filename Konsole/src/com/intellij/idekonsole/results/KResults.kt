@@ -67,27 +67,28 @@ class KErrorResult(val error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KPsiElementsResult(val elements: List<PsiElement?>) : KResult {
+class KUsagesResult<T:PsiElement>(val elements: List<T?> ,val searchQuery:String, r: ((T) -> Unit)? = null) : KResult {
     val panel: JComponent
+    val refactoring: ((T) -> Unit)? = r
 
     init {
         val prefix = JBLabel("")
-        val label = JBLabel("Show Usages")
+        val label = JBLabel("" + elements.size + " elements found")
         label.foreground = Color.BLUE;
         val project = project()
         //todo one node should be shown as a ref
         if (project != null) {
             label.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
-                    UsagesPresentation(project).showUsages(elements.filterNotNull())
+                    KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery ,refactoring)
                 }
             })
         }
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
     }
 
-    constructor (element: PsiElement?):this(listOf(element))
-    constructor (vararg element: PsiElement?):this(element.toList())
+    constructor (element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null):this(listOf(element), searchQuery, refactoring)
+    constructor (vararg element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null):this(element.toList(), searchQuery, refactoring)
 
     override fun getPresentation(): JComponent = panel
 }
@@ -106,7 +107,7 @@ class KExceptionResult(val t: Throwable) : KResult {
         if (project != null) {
             label.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
-                    val dialog: MyAnalyzeStacktraceDialog = MyAnalyzeStacktraceDialog(project, writer.toString())
+                    val dialog: KAnalyzeStacktraceDialog = KAnalyzeStacktraceDialog(project, writer.toString())
                     dialog.show()
                 }
             })

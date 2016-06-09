@@ -13,7 +13,7 @@ import javax.swing.JPanel
 /**
  * @author simon
  */
-class MyAnalyzeStacktraceDialog : DialogWrapper {
+class KAnalyzeStacktraceDialog : DialogWrapper {
     val project: Project
     val text : String
     lateinit var myEditorPanel: AnalyzeStacktraceUtil.StacktraceEditorPanel
@@ -27,7 +27,7 @@ class MyAnalyzeStacktraceDialog : DialogWrapper {
 
     override fun createCenterPanel(): JComponent? {
         val var1 = JPanel(BorderLayout())
-        var1.add(JLabel("Put a stacktrace here:"), "North")
+        var1.add(JLabel("Stacktrace:"), "North")
         this.myEditorPanel = AnalyzeStacktraceUtil.createEditorPanel(this.project, this.myDisposable)
         this.myEditorPanel.text = text
         var1.add(this.myEditorPanel, "Center")

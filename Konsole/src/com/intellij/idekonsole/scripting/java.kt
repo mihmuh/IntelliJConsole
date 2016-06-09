@@ -1,6 +1,7 @@
 package com.intellij.idekonsole.scripting
 
 import com.intellij.ide.util.PackageUtil
+import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.impl.scopes.ModulesScope
@@ -28,6 +29,21 @@ fun classes(name: String): List<PsiClass?> {
 }
 
 fun cls(name: String): PsiClass? = classes(name).filterNotNull().firstOrNull()
+
+class SearchResult {
+    val psiElements:List<PsiElement>
+    val query:String
+
+    constructor(psiElements: List<PsiElement>, query: String) {
+        this.psiElements = psiElements
+        this.query = query
+    }
+
+    fun showUsages():KUsagesResult<PsiElement>{
+        return KUsagesResult(psiElements, query)
+    }
+
+}
 
 fun methods(classAndMethod: String): List<PsiMethod> {
     val i = classAndMethod.lastIndexOf(".")
