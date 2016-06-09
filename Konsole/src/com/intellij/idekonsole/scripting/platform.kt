@@ -139,8 +139,7 @@ fun show(o: Any?) {
         //do nothing
     } else if (o is Function<*>) {
         show((o as () -> Any?).invoke())
-    }
-    if (o is KResult) {
+    } else if (o is KResult) {
         show(o)
     } else if (o is String) {
         show(o)
