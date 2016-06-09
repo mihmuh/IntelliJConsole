@@ -140,13 +140,17 @@ fun show(e: List<Any?>) {
     show(e.toString())
 }
 
+fun show(f: () -> Any?) {
+    show(f())
+}
+
 fun show(o: Any?) {
     if (o == null) {
         //do nothing
     } else if (o is Unit) {
         //do nothing
-    } else if (o is Function<*>) {
-        show((o as () -> Any?).invoke())
+    } else if (o is (() -> Any?)) {
+        show(o)
     } else if (o is KResult) {
         show(o)
     } else if (o is String) {
