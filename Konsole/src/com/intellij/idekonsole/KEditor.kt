@@ -59,6 +59,7 @@ class KEditor(val project: Project) : Disposable {
         splitter.setHonorComponentsMinimumSize(false)
         splitter.firstComponent = scrollPane
         splitter.secondComponent = editor.component
+        splitter.proportion = 0.7f
     }
 
     private fun resetInputContent() {
@@ -73,8 +74,8 @@ class KEditor(val project: Project) : Disposable {
 
             textMarker = inputDocument.createRangeMarker(foldingStart, foldingEnd)
 
-            for (b in KTemplates.getConsoleBlocks()){
-                inputDocument.createGuardedBlock(b-1, b)
+            for (b in KTemplates.getConsoleBlocks()) {
+                inputDocument.createGuardedBlock(b - 1, b)
             }
 
             val fModel = editor.foldingModel
@@ -145,6 +146,7 @@ class KEditor(val project: Project) : Disposable {
 
     fun clearOutput() {
         viewer.clear()
+        resetInputContent()
     }
 
     private class Viewer() : JPanel() {
