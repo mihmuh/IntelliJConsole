@@ -20,9 +20,9 @@ class KToolWindow(val project: Project) : JPanel(), Disposable {
         layout = BorderLayout()
 
         val actionGroup = ActionManager.getInstance().getAction("KToolWindow.Toolbar") as ActionGroup
-        val toolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true)
+        val toolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, false)
         toolbar.setTargetComponent(this)
-        add(toolbar.component, BorderLayout.NORTH)
+        add(toolbar.component, BorderLayout.WEST)
 
         for (action in actionGroup.getChildren(null)) {
             action.registerCustomShortcutSet(action.shortcutSet, this)
