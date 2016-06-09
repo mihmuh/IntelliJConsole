@@ -94,18 +94,16 @@ object KIdeaModuleBuilder {
             val newLibrary = libraryTable.createLibrary(KSettings.LIB_NAME)
             val libraryModel = newLibrary.modifiableModel
 
-            val ideaLibraries = VfsUtil.getUrlForLibraryRoot(File(PathManager.getHomePath()+"/lib"))
+            val ideaLibraries = VfsUtil.getUrlForLibraryRoot(File(PathManager.getHomePath() + "/lib"))
             libraryModel.addJarDirectory(ideaLibraries, true)
 
             for (p in PluginManager.getPlugins()) {
-                val clsUrl = "file://${p.path}/classes"
-                val vf = VfsUtil.findFileByURL(URL(clsUrl))
+                val vf = VfsUtil.findFileByIoFile(File("${p.path}/classes"), true)
                 if (vf != null) {
-                    libraryModel.addRoot(clsUrl, OrderRootType.CLASSES)
+                    libraryModel.addRoot(vf, OrderRootType.CLASSES)
                 }
 
-                val libUrl = "file://${p.path}/lib"
-                val vf2 = VfsUtil.findFileByURL(URL(libUrl))
+                val vf2 = VfsUtil.findFileByIoFile(File("${p.path}/lib"), true);
                 if (vf2 != null) {
                     libraryModel.addJarDirectory(vf2, true)
                 }
