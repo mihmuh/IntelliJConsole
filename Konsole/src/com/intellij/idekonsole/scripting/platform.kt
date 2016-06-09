@@ -2,11 +2,8 @@ package com.intellij.idekonsole.scripting
 
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
-import com.intellij.ide.DataManager
-import com.intellij.ide.util.PackageUtil
-import com.intellij.idekonsole.KDataKeys
-import com.intellij.openapi.actionSystem.DataContext
-import com.intellij.openapi.actionSystem.PlatformDataKeys
+import com.intellij.idekonsole.KDataHolder
+import com.intellij.idekonsole.KEditor
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -17,8 +14,6 @@ import com.intellij.psi.search.SearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
 import com.intellij.util.CommonProcessors
-import org.junit.Assert
-import java.util.*
 
 //----------- find, refactor
 
@@ -48,16 +43,13 @@ fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
 
 //todo make for-internal-use
 fun context(): PsiElement? {
-    val dc: DataContext? = DataManager.getInstance().getDataContextFromFocus().getResultSync(100);
-    if (dc == null) return null;
-    return KDataKeys.CONTEXT_CLASS.getData(dc);
+    val editor = editor() ?: return null
+    return editor.inputPsiFile;
 }
 
-fun project(): Project? {
-    val dc: DataContext? = DataManager.getInstance().getDataContextFromFocus().getResultSync(100);
-    if (dc == null) return null;
-    return PlatformDataKeys.PROJECT.getData(dc);
-}
+fun project(): Project? = KDataHolder.project
+
+private fun editor(): KEditor? = KDataHolder.editor
 
 fun Project.modules(): List<Module> {
     return ModuleManager.getInstance(this).modules.filterNotNull().toList();
@@ -78,11 +70,9 @@ fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> = this.filter 
 fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? = this.withName(name).firstOrNull();
 
 fun print(s: String) {
-    val dc: DataContext? = DataManager.getInstance().getDataContextFromFocus().getResultSync(100);
-    if (dc == null) return;
-    val editor = KDataKeys.K_EDITOR.getData(dc)
-    editor?.handleCommand(s);
+    editor()?.handleCommand(s);
 }
+
 
 //todo there should be more "print" functions
 

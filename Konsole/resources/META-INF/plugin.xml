@@ -22,8 +22,6 @@
 
     <actions>
         <group id="KToolWindow.Toolbar">
-            <action class="com.intellij.idekonsole.KNewTabAction" id="KNewTabAction"/>
-            <action class="com.intellij.idekonsole.KCloseTabAction" id="KCloseTabAction"/>
         </group>
     </actions>
 </idea-plugin>

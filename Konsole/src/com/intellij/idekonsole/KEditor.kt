@@ -18,6 +18,7 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiFile
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.ScrollPaneFactory
@@ -29,10 +30,11 @@ import javax.swing.JPanel
 import javax.swing.JScrollPane
 
 class KEditor(val project: Project) : Disposable {
-    val splitter: JBSplitter
+    private val splitter: JBSplitter
 
-    private val inputFile: VirtualFile
-    private val inputDocument: Document
+    val inputFile: VirtualFile
+    val inputDocument: Document
+    val inputPsiFile: PsiFile
 
     private val viewer = Viewer()
     private val editor: EditorEx
@@ -44,7 +46,7 @@ class KEditor(val project: Project) : Disposable {
         inputFile = createVirtualFile(kotlinLanguage)
         inputDocument = FileDocumentManager.getInstance().getDocument(inputFile)!!
 
-        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(inputDocument)!!
+        inputPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(inputDocument)!!
 
         editor = EditorFactory.getInstance().createEditor(inputDocument, project, inputFile, false) as EditorEx
         EditorActionManager.getInstance().setReadonlyFragmentModificationHandler(inputDocument, {})
@@ -96,7 +98,8 @@ class KEditor(val project: Project) : Disposable {
 
     fun handleCommand(text: String) {
         viewer.add(KCommandResult(text))
-        val callback = KCommandHandler.compile(KIdeaModuleBuilder.createModule(project), inputFile)
+        val module = KIdeaModuleBuilder.createModule(project)
+        val callback = KCommandHandler.compile(module, this)
         callback.doWhenDone(Runnable {
             ApplicationManager.getApplication().invokeLater {
                 try {
@@ -121,6 +124,8 @@ class KEditor(val project: Project) : Disposable {
         }
         EditorFactory.getInstance().releaseEditor(editor)
     }
+
+    fun getComponent() = splitter
 
     private class Viewer() : JPanel() {
         val V_GAP = 5

@@ -14,7 +14,7 @@ import java.net.URL
 object KCommandHandler {
     private val LOG = Logger.getInstance(KResult::class.java)
 
-    fun compile(module: Module, file: VirtualFile): AsyncResult<Computable<KResult>> {
+    fun compile(module: Module, editor: KEditor): AsyncResult<Computable<KResult>> {
         val future = AsyncResult<Computable<KResult>>()
 
         CompilerManager.getInstance(module.project).compile(module, { aborted, errors, warnings, compileContext ->
@@ -23,6 +23,8 @@ object KCommandHandler {
             val classloader = MegaLoader(url)
             val clazz = classloader.loadClass("konsole.runtime.TestKt");
 
+            KDataHolder.project = module.project
+            KDataHolder.editor = editor
             try {
                 val m = clazz.getMethod("main_exec")
 
