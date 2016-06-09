@@ -38,6 +38,8 @@ fun <T : PsiElement> instances(cls: PsiClassRef<T>): Stream<T> {
     return nodes().filter { cls.myRef.isAssignableFrom(it.javaClass) }.map { it as T }
 }
 
+fun <T> List<T>.stream()= J8Util.stream(this);
+
 fun nodes() : Stream<PsiElement> {
     val project = project()
     return project!!.packages().stream()

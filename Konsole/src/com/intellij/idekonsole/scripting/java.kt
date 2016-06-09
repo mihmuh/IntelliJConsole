@@ -87,6 +87,8 @@ fun String.asStatement(): PsiStatement = parserFacade().createStatementFromText(
 
 fun String.asExpression(): PsiExpression = parserFacade().createExpressionFromText(this, context());
 
+//fun PsiClass.desce
+
 /*
 * .asPsi(experimantal)
 * .isSubtype, .type, type//
