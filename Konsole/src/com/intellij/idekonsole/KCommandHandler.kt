@@ -15,8 +15,8 @@ import java.net.URLClassLoader
 object KCommandHandler {
     private val LOG = Logger.getInstance(KResult::class.java)
 
-    fun compile(module: Module, editor: KEditor): AsyncResult<Computable<KResult?>> {
-        val future = AsyncResult<Computable<KResult?>>()
+    fun compile(module: Module, editor: KEditor): AsyncResult<Computable<Any?>> {
+        val future = AsyncResult<Computable<Any?>>()
 
         CompilerManager.getInstance(module.project).compile(module, { aborted, errors, warnings, compileContext ->
             val outputPath = CompilerPaths.getModuleOutputPath(module, false)
@@ -31,10 +31,10 @@ object KCommandHandler {
 
                 future.setDone(Computable {
                     val res = m.invoke(null)
-                    return@Computable res as KResult?
+                    return@Computable res
                 })
             } catch(e: Exception) {
-                future.setDone(Computable<KResult?> {
+                future.setDone(Computable<Any?> {
                     ExceptionUtil.rethrowAllAsUnchecked(e)
                     return@Computable null
                 })

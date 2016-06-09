@@ -4,6 +4,7 @@ import com.intellij.ide.ui.AntialiasingType
 import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KExceptionResult
 import com.intellij.idekonsole.results.KResult
+import com.intellij.idekonsole.scripting.show
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
@@ -108,8 +109,8 @@ class KEditor(val project: Project) : Disposable {
         callback.doWhenDone(Runnable {
             ApplicationManager.getApplication().invokeLater {
                 try {
-                    val kResult = callback.result.compute()
-                    if (kResult != null) viewer.add(kResult)
+                    val returnValue = callback.result.compute()
+                    if (returnValue != null) show(returnValue)
                 } catch (e: Exception) {
                     viewer.add(KExceptionResult(e))
                 }
@@ -130,6 +131,11 @@ class KEditor(val project: Project) : Disposable {
     }
 
     fun getComponent() = splitter
+
+    fun addResult(result: KResult): KResult {
+        viewer.add(result)
+        return result
+    }
 
     fun clearOutput() {
         viewer.clear()
@@ -186,11 +192,6 @@ class KEditor(val project: Project) : Disposable {
 
     private fun write(task: () -> Unit) {
         ApplicationManager.getApplication().runWriteAction(task)
-    }
-
-    fun show(result : KResult) : KResult {
-        viewer.add(result)
-        return result
     }
 
     fun containsErrors(): Boolean {
