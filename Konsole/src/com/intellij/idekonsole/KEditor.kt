@@ -73,8 +73,9 @@ class KEditor(val project: Project) : Disposable {
 
             textMarker = inputDocument.createRangeMarker(foldingStart, foldingEnd)
 
-//            inputDocument.createGuardedBlock(0, foldingStart)
-//            inputDocument.createGuardedBlock(foldingEnd + 1, inputDocument.textLength)
+            for (b in KTemplates.getConsoleBlocks()){
+                inputDocument.createGuardedBlock(b-1, b)
+            }
 
             val fModel = editor.foldingModel
             fModel.runBatchFoldingOperation({

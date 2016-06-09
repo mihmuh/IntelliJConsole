@@ -9,8 +9,9 @@ import com.intellij.psi.search.searches.ClassInheritorsSearch
 
 object KTemplates {
     private val CARET = "{CARET}"
-    private val FOLDING_START = "{FOLDING_START}"
-    private val FOLDING_END = "{FOLDING_END}"
+    private val BLOCK = "{BLOCK}"
+    private val NOFOLD_START = "{FOLDING_START}"
+    private val NOFOLD_END = "{FOLDING_END}"
 
     private val CONSOLE_CONTENT =
             """
@@ -21,17 +22,26 @@ object KTemplates {
             import com.intellij.idekonsole.scripting.*
 
             fun main_exec(){
-              ${FOLDING_START}${CARET}
-              ${FOLDING_END}
+            show({
+                ${BLOCK}
+                ${NOFOLD_START}${CARET}${NOFOLD_END}
+                ${BLOCK}
+            })
             }
 
             """.trimIndent()
 
 
-    fun getConsoleContent() = CONSOLE_CONTENT.replace(CARET, "").replace(FOLDING_START, "").replace(FOLDING_END, "")
-    fun getConsoleCaretOffset() = CONSOLE_CONTENT.replace(FOLDING_START, "").replace(FOLDING_END, "").indexOf(CARET)
-    fun getConsoleFoldingStart() = CONSOLE_CONTENT.replace(CARET, "").replace(FOLDING_END, "").indexOf(FOLDING_START)
-    fun getConsoleFoldingEnd() = CONSOLE_CONTENT.replace(CARET, "").replace(FOLDING_START, "").indexOf(FOLDING_END)
+    fun getConsoleContent() = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "")
+    fun getConsoleCaretOffset() = CONSOLE_CONTENT.replace(BLOCK, "").replace(NOFOLD_START, "").replace(NOFOLD_END, "").indexOf(CARET)
+    fun getConsoleFoldingStart() = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_END, "").indexOf(NOFOLD_START)
+    fun getConsoleFoldingEnd() = CONSOLE_CONTENT.replace(BLOCK, "").replace(CARET, "").replace(NOFOLD_START, "").indexOf(NOFOLD_END)
+    fun getConsoleBlocks():List<Int> {
+        val onlyBlock = CONSOLE_CONTENT.replace(CARET, "").replace(NOFOLD_END, "").replace(NOFOLD_START, "")
+        val b1 = onlyBlock.indexOf(BLOCK)
+        val b2 = onlyBlock.replaceFirst(BLOCK, "").indexOf(BLOCK)
+        return listOf(b1,b2)
+    }
 
     fun initHelperClasses(module: Module) {
         val referenceFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + "PsiClassReferences.kt")
