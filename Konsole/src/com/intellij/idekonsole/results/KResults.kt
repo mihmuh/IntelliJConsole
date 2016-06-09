@@ -22,7 +22,7 @@ class KCommandResult(val text: String) : KResult {
 
     init {
         val label = JBLabel(text).setCopyable(true)
-        label.foreground = JBColor.GREEN
+        label.foreground = JBColor.GREEN.darker()
 
         panel = label
     }
