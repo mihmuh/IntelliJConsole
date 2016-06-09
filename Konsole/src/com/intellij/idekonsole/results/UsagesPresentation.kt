@@ -29,19 +29,10 @@ class UsagesPresentation {
         myUsageViewSettings.loadState(usageViewSettings);
         val usagesViewManager = UsageViewManager.getInstance(project)
 
-        val usagesTargets = LinkedList<UsageTarget>()
-
-        elements.forEach { usagesTargets.add(PsiElement2UsageTargetAdapter(it)) }
-
         val usages = LinkedList<Usage>()
-
         elements.forEach { usages.add(UsageInfo2UsageAdapter(UsageInfo(it))) }
-
         val presentation = createPresentation()
-
-        usagesViewManager.showUsages(Array(usagesTargets.size,{ i -> usagesTargets[i] } ), Array(usagesTargets.size,{ i -> usages[i] } ), presentation)
-
-
+        usagesViewManager.showUsages(emptyArray(), Array(usages.size,{ i -> usages[i] } ), presentation)
     }
 
     private fun createPresentation(): UsageViewPresentation {
