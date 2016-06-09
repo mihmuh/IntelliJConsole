@@ -1,5 +1,6 @@
 package com.intellij.idekonsole
 
+import com.intellij.ide.DataManager
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.ActionManager
@@ -22,9 +23,23 @@ class KToolWindow(val project: Project) : JPanel(), Disposable {
         val toolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true)
         add(toolbar.component, BorderLayout.NORTH)
 
+        for (action in actionGroup.getChildren(null)) {
+            action.registerCustomShortcutSet(action.shortcutSet, this)
+        }
+
         try {
             val editor = KEditor(project)
             Disposer.register(this, editor)
+
+            DataManager.registerDataProvider(this, { key ->
+                if (KDataKeys.K_TOOL_WINDOW.`is`(key)) {
+                    this@KToolWindow
+                } else if (KDataKeys.K_EDITOR.`is`(key)) {
+                    editor
+                } else {
+                    null
+                }
+            })
 
             add(editor.getComponent(), BorderLayout.CENTER)
         } catch(e: Exception) {

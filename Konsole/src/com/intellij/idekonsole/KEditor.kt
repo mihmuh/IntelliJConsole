@@ -63,12 +63,6 @@ class KEditor(val project: Project) : Disposable {
         splitter.setHonorComponentsMinimumSize(false)
         splitter.firstComponent = scrollPane
         splitter.secondComponent = editor.component
-
-        object : DumbAwareAction() {
-            override fun actionPerformed(event: AnActionEvent?) {
-                handleCommand(inputDocument.text)
-            }
-        }.registerCustomShortcutSet(CommonShortcuts.CTRL_ENTER, editor.component)
     }
 
     private fun resetInputContent() {
@@ -102,7 +96,8 @@ class KEditor(val project: Project) : Disposable {
         }
     }
 
-    fun handleCommand(text: String) {
+    fun handleCommand() {
+        val text = inputDocument.text
         val marker = textMarker
         val commandText = if (marker != null && marker.isValid) {
             text.substring(marker.startOffset, marker.endOffset)
@@ -135,6 +130,10 @@ class KEditor(val project: Project) : Disposable {
     }
 
     fun getComponent() = splitter
+
+    fun clearOutput() {
+        viewer.clear()
+    }
 
     private class Viewer() : JPanel() {
         val V_GAP = 5
