@@ -35,14 +35,14 @@ fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project
 }
 
 fun <T : PsiElement> instances(cls: PsiClassRef<T>): Stream<T> {
-    return nodes().filter { cls.javaClass.isAssignableFrom(it.javaClass) }.map { it as T }
+    return nodes().filter { cls.myRef.isAssignableFrom(it.javaClass) }.map { it as T }
 }
 
 fun nodes() : Stream<PsiElement> {
     val project = project()
     return project!!.packages().stream()
             .flatMap { it.getFiles(GlobalSearchScope.projectScope(project)).map { it!! }.stream() }
-            .flatMap { it.children.map { it!! }.stream() }
+            .flatMap { it.children.map { it!! }.stream() }.filter { it !is PsiWhiteSpace }
 }
 
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
