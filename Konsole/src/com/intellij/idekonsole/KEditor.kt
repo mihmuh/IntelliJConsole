@@ -10,6 +10,7 @@ import com.intellij.openapi.actionSystem.CommonShortcuts
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.RangeMarker
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -39,6 +40,8 @@ class KEditor(val project: Project) : Disposable {
     private val viewer = Viewer()
     private val editor: EditorEx
     private val scrollPane: JScrollPane
+
+    private var textMarker: RangeMarker? = null
 
     init {
         module = KIdeaModuleBuilder.createModule(project)
@@ -78,6 +81,8 @@ class KEditor(val project: Project) : Disposable {
 
             inputDocument.setText(content)
 
+            textMarker = inputDocument.createRangeMarker(foldingStart, foldingEnd)
+
             //            inputDocument.createGuardedBlock(0, offset)
             //            inputDocument.createGuardedBlock(offset + 1, inputDocument.textLength)
 
@@ -98,7 +103,13 @@ class KEditor(val project: Project) : Disposable {
     }
 
     fun handleCommand(text: String) {
-        viewer.add(KCommandResult(text))
+        val marker = textMarker
+        val commandText = if (marker != null && marker.isValid) {
+            text.substring(marker.startOffset, marker.endOffset)
+        } else {
+            text
+        }
+        viewer.add(KCommandResult(commandText))
         val callback = KCommandHandler.compile(module, this)
         callback.doWhenDone(Runnable {
             ApplicationManager.getApplication().invokeLater {
