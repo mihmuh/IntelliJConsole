@@ -4,9 +4,9 @@ import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.idekonsole.KDataHolder
 import com.intellij.idekonsole.KEditor
-import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.results.KStdoutResult
+import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -132,7 +132,14 @@ fun show(e: List<Any>) {
     show(e.toString())
 }
 
-fun show(o: Any) {
+fun show(o: Any?) {
+    if (o == null) {
+        //do nothing
+    } else if (o is Unit) {
+        //do nothing
+    } else if (o is Function<*>) {
+        show((o as () -> Any?).invoke())
+    }
     if (o is KResult) {
         show(o)
     } else if (o is String) {
