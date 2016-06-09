@@ -67,7 +67,7 @@ class KErrorResult(val error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KUsagesResult<T:PsiElement>(val elements: List<T?> ,val searchQuery:String, r: ((T) -> Unit)? = null) : KResult {
+class KUsagesResult<T : PsiElement>(val elements: List<T?>, val searchQuery: String, r: ((T) -> Unit)? = null) : KResult {
     val panel: JComponent
     val refactoring: ((T) -> Unit)? = r
 
@@ -80,27 +80,28 @@ class KUsagesResult<T:PsiElement>(val elements: List<T?> ,val searchQuery:String
         if (project != null) {
             label.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
-                    KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery ,refactoring)
+                    KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery, refactoring)
                 }
             })
         }
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
     }
 
-    constructor (element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null):this(listOf(element), searchQuery, refactoring)
-    constructor (vararg element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null):this(element.toList(), searchQuery, refactoring)
+    constructor (element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null) : this(listOf(element), searchQuery, refactoring)
+
+    constructor (vararg element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null) : this(element.toList(), searchQuery, refactoring)
 
     override fun getPresentation(): JComponent = panel
 }
 
 class KExceptionResult(val t: Throwable) : KResult {
     val panel: JComponent
+    val DARK_BLUE = Color(0, 0, 128)
 
     init {
         val prefix = JBLabel("Exception: ")
-        val label = JBLabel(t.javaClass.name)
+        val label = JBLabel(underlineAndHighlight(shortPackageName(t.javaClass.name), DARK_BLUE, Color.PINK))
         label.background = Color.PINK
-        label.foreground = Color.BLUE
         val writer: StringWriter = StringWriter();
         t.printStackTrace(PrintWriter(writer));
         val project = project()
@@ -114,6 +115,39 @@ class KExceptionResult(val t: Throwable) : KResult {
         }
 
         panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
+        panel.background = null
+    }
+
+    fun underlineAndHighlight(s: String?, foreground:Color, background:Color): String {
+        if (s == null) {
+            return ""
+        }
+        val htmlForeground = colorToHtml(foreground)
+        val htmlBackground = colorToHtml(background)
+
+        return "<HTML><U style=\"color:$htmlForeground ;background-color:$htmlBackground\">$s</U></HTML>"
+    }
+
+    private fun colorToHtml(color: Color): String {
+        val rgb = Integer.toHexString(color.rgb)
+        return rgb.substring(2, rgb.length)
+    }
+
+    fun shortPackageName(fqName: String?): String? {
+        if (fqName == null) {
+            return fqName
+        }
+        var start = 0
+        var dotIndex = fqName.indexOf('.', start)
+        val stringBuilder = StringBuilder()
+        while (dotIndex > 0) {
+            stringBuilder.append(fqName[start])
+            stringBuilder.append('.')
+            start = dotIndex + 1
+            dotIndex = fqName.indexOf('.', start)
+        }
+        stringBuilder.append(fqName.substring(start, fqName.length))
+        return stringBuilder.toString()
     }
 
     override fun getPresentation(): JComponent = panel
