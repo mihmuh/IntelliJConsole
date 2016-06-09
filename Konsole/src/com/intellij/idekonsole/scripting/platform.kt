@@ -20,7 +20,7 @@ import com.intellij.util.CommonProcessors
 
 //----------- find, refactor
 
-fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project())): List<PsiElement> {
+fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project())): List<UsageInfo> {
     val project = project();
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false);
     val processor = CommonProcessors.CollectProcessor<UsageInfo>()
@@ -30,7 +30,7 @@ fun usages(node: PsiElement, scope: SearchScope? = EverythingGlobalScope(project
     for (psiElement in psiElements) {
         handler.processElementUsages(psiElement, processor, options)
     }
-    return processor.getResults().map { it.element }.requireNoNulls();
+    return processor.getResults().map { it };
 }
 
 fun <T : PsiElement> instances(cls: PsiClassRef<T>): List<T> {
@@ -72,28 +72,28 @@ fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> = this.filter 
 
 fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? = this.withName(name).firstOrNull();
 
-fun show(s: String) {
+fun show(r : KResult) {
+    editor()?.show(r)
+}
+
+fun show(s : String) {
     show(KStdoutResult(s))
 }
 
-fun show(result: KResult) {
-    editor()?.show(result);
+fun show(vararg e : PsiElement) {
+    show(e.toList())
 }
 
-fun show(o: Any) {
+fun show(e : List<PsiElement>) {
+    show(KPsiElementsResult(e))
+}
+
+fun show(o : Any) {
     show(o.toString())
 }
 
-fun show(vararg node: PsiElement) {
-    show(node.toList())
-}
-
-fun show(nodes: List<PsiReference>) {
-    show(KPsiElementsResult(nodes.map { it.resolve()!! }))
-}
-
-fun show(vararg node: PsiReference) {
-    show(node.toList())
+fun show(u : UsageInfo) {
+    show(u.element!!)
 }
 
 //todo there should be more "print" functions
