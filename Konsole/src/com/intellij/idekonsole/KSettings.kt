@@ -11,8 +11,8 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
         val instance: KSettings
             get() = ServiceManager.getService(KSettings::class.java)
 
-        val LIB_NAME = "KONSOLE_LIB"
-        val MODULE_NAME = "KONSOLE_MODULE"
+        val LIB_NAME = "Z_SECRET_LIB"
+        val MODULE_NAME = "Z_SECRET_MODULE"
 
         val SRC_DIR = "com/intellij/idekonsole/runtime/";
         val CONSOLE_FILE_PATH = SRC_DIR + "Test.kt";
