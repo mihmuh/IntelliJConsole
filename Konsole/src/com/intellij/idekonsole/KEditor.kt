@@ -108,7 +108,8 @@ class KEditor(val project: Project) : Disposable {
         callback.doWhenDone(Runnable {
             ApplicationManager.getApplication().invokeLater {
                 try {
-                    viewer.add(callback.result.compute())
+                    val kResult = callback.result.compute()
+                    if (kResult != null) viewer.add(kResult)
                 } catch (e: Exception) {
                     viewer.add(KExceptionResult(e))
                 }
