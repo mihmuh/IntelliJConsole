@@ -153,6 +153,10 @@ fun show(u: UsageInfo) {
     show(u.element!!)
 }
 
+fun <T> T.sameAs(e : T) : Boolean {
+    return this == e
+}
+
 //todo there should be more "print" functions
 
 //todo internal mode (impossible?)
