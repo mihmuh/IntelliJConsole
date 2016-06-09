@@ -28,11 +28,8 @@ class KCommandResult(val text: String) : KResult {
     val panel: JComponent
 
     init {
-        val prefix = JBLabel("> ")
-        val label = createLabel(text)
-        label.foreground = JBColor.GREEN.darker()
-
-        panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
+        val label = createLabel("> " + if (text.contains('\n')) (text + "\n") else text)
+        panel = JBUI.Panels.simplePanel(label)
         panel.background = null
     }
 
@@ -44,7 +41,7 @@ class KStdoutResult(val text: String) : KResult {
 
     init {
         val label = createLabel(text)
-        label.foreground = JBColor.BLACK
+        label.foreground = JBColor.RED
 
         panel = label
     }
@@ -77,13 +74,12 @@ class KUsagesResult<T : PsiElement>(val elements: List<T?>, val searchQuery: Str
     lateinit var mouseAdapter: MouseListener
 
     init {
-        val prefix = JBLabel(">")
         var elementsString = "" + elements.size + " element"
         if (elements.size > 1) elementsString += "s"
         if (refactoring != null) {
             elementsString = "Refactor " + elementsString
         }
-        label = JBLabel(elementsString)
+        label = JBLabel("<html><a>" + elementsString + "</a></html>")
         label.foreground = Color.BLUE;
 
         //todo one node should be shown as a ref
@@ -93,7 +89,8 @@ class KUsagesResult<T : PsiElement>(val elements: List<T?>, val searchQuery: Str
             }
         }
         label.addMouseListener(mouseAdapter)
-        panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
+        panel = JBUI.Panels.simplePanel(label)
+        panel.background = null
     }
 
     fun openUsagesView() {
