@@ -120,7 +120,9 @@ fun <T : PsiElement> T.assertValid() : T {
 
 fun String.asType(): PsiType = asType(null);
 
-fun String.asExpression(): PsiExpression = parserFacade().createExpressionFromText(this, null);
+fun String.asExpression(): PsiExpression = asExpression(null);
+
+fun String.asExpression(context : PsiElement?): PsiExpression = parserFacade().createExpressionFromText(this, context);
 
 fun PsiClass.inheritors(): List<PsiClass>{
     return ClassInheritorsSearch.search(this).toList();
@@ -128,6 +130,10 @@ fun PsiClass.inheritors(): List<PsiClass>{
 
 fun PsiExpression.hasType(type : String) : Boolean {
     return this.type!!.isAssignableFrom(type.asType(this))
+}
+
+fun PsiExpression.replaceWithExpression(newNode: String) {
+    this.replace(newNode.asExpression(this))
 }
 
 /*
