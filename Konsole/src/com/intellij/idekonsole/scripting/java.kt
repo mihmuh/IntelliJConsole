@@ -85,7 +85,9 @@ fun String.asClass(): PsiClass = parserFacade().createClassFromText(this, contex
 
 fun String.asStatement(): PsiStatement = parserFacade().createStatementFromText(this, context());
 
-fun String.asType(): PsiTypeElement = parserFacade().createTypeElementFromText(this, context());
+fun String.asTypeElement(): PsiTypeElement = parserFacade().createTypeElementFromText(this, context());
+
+fun String.asType(): PsiType = this.asTypeElement().type;
 
 fun String.asExpression(): PsiExpression = parserFacade().createExpressionFromText(this, context());
 
