@@ -113,6 +113,7 @@ class KEditor(val project: Project) : Disposable {
                         history.add(text);
                         histIndex = -1
                         setText(KTemplates.consoleContent)
+                        editor.scrollingModel.scrollVertically(0)
                     } catch (e: Exception) {
                         viewer.add(KExceptionResult(e))
                     }
