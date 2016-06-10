@@ -68,7 +68,8 @@ class KEditor(val project: Project) : Disposable {
 
         splitter = JBSplitter(true)
         splitter.firstComponent = scrollPane
-        editor.gutterComponentEx.parent.isVisible = false
+        //cannot set visible=false since it causes lags in highlighting
+        //editor.gutterComponentEx.parent.isVisible = false
         splitter.secondComponent = editor.component
         splitter.proportion = 0.7f
     }
