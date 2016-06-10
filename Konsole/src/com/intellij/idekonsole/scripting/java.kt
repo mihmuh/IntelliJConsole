@@ -116,7 +116,7 @@ fun PsiExpression.hasType(type : String) : Boolean {
     try {
         val thisType = this.type
         if (thisType != null) {
-            return thisType.isAssignableFrom(type.asType(this))
+            return type.asType(this).isAssignableFrom(thisType)
         }
         return false;
     } catch(e:ParsePsiException) {
