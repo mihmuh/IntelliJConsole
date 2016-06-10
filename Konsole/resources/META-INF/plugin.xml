@@ -14,7 +14,7 @@
     <depends>org.jetbrains.kotlin</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Konsole" anchor="bottom" canCloseContents="true"
+        <toolWindow id="Console" anchor="bottom" canCloseContents="true"
                     factoryClass="com.intellij.idekonsole.KToolWindowFactory"/>
         <applicationService serviceInterface="com.intellij.idekonsole.KSettings"
                             serviceImplementation="com.intellij.idekonsole.KSettings"/>
