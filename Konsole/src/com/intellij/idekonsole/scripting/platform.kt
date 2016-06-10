@@ -73,6 +73,12 @@ fun context(): PsiElement? {
 
 fun project(): Project = KDataHolder.project!!
 
+var scope: GlobalSearchScope
+    get() = KDataHolder.scope!!
+    set(s: GlobalSearchScope) {
+        KDataHolder.scope = s
+    }
+
 private fun editor(): KEditor? = KDataHolder.editor
 
 fun Project.modules(): List<Module> {

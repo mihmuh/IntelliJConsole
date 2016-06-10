@@ -27,20 +27,6 @@ object KTemplates {
             }
             }""".trimIndent()
 
-    private val VARIABLES_CONTENT =
-            """
-            package com.intellij.idekonsole.runtime;
-
-            import com.intellij.idekonsole.KDataHolder
-            import com.intellij.psi.search.GlobalSearchScope
-
-            var scope: GlobalSearchScope
-                get() = KDataHolder.scope!!
-                set(s: GlobalSearchScope) {
-                    KDataHolder.scope = s
-                }
-            """.trimIndent()
-
 
     val consoleContent = CONSOLE_CONTENT.replace(COMMAND, MAGIC + "      " + MAGIC)
     fun getConsoleCaretOffset(text: String) = text.indexOf(MAGIC) + MAGIC.length;
@@ -54,12 +40,10 @@ object KTemplates {
     fun initHelperClasses(module: Module) {
         val psiStubsFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.PSI_STUBS)
         val javaTokensFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.JAVA_TOKEN_STUBS)
-        val globalVariablesFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.GLOBAL_VARIABLES)
         module.project.save()
         DumbService.getInstance(module.project).runWhenSmart {
             FileUtil.writeToFile(VfsUtil.virtualToIoFile(psiStubsFile), generatePsiClassReferences(module).toString())
             FileUtil.writeToFile(VfsUtil.virtualToIoFile(javaTokensFile), generateJavaTokenReferences(module).toString())
-            FileUtil.writeToFile(VfsUtil.virtualToIoFile(globalVariablesFile), VARIABLES_CONTENT)
         }
     }
 
