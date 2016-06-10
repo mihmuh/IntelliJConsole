@@ -4,6 +4,7 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import java.awt.Color
 import java.util.*
 
 @State(name = "IDEKonsole", storages = arrayOf(Storage("/ide_konsole.xml")))
@@ -20,6 +21,8 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
         val JAVA_TOKEN_STUBS = "JavaTokenReferences.kt"
         val GLOBAL_VARIABLES = "GlobalVariables.kt"
         val CONSOLE_FILE_PATH = SRC_DIR + "Test.kt";
+
+        val BACKGROUND_COLOR = Color.LIGHT_GRAY
     }
 
     var data = Data()

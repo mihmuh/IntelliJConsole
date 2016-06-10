@@ -161,13 +161,16 @@ class KExceptionResult(val t: Throwable) : KResult {
 
     init {
         val prefix = JBLabel("Exception: ")
-        val label = JBLabel(underlineAndHighlight(shortPackageName(t.javaClass.name), DARK_BLUE, Color.PINK))
-        label.background = Color.PINK
+        val classLabel = JBLabel(underlineAndHighlight(shortPackageName(t.javaClass.name), DARK_BLUE, Color.PINK))
+        val messageLabel = JBLabel(": " + t.message.toString())
+        messageLabel.background = Color.PINK
+        prefix.background = Color.PINK
+        classLabel.background = Color.PINK
         val writer: StringWriter = StringWriter();
         t.printStackTrace(PrintWriter(writer));
         val project = project()
         if (project != null) {
-            label.addMouseListener(object : MouseAdapter() {
+            classLabel.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
                     val dialog: KAnalyzeStacktraceDialog = KAnalyzeStacktraceDialog(project, writer.toString())
                     dialog.show()
@@ -175,7 +178,7 @@ class KExceptionResult(val t: Throwable) : KResult {
             })
         }
 
-        panel = JBUI.Panels.simplePanel(label).addToLeft(prefix)
+        panel = JBUI.Panels.simplePanel(messageLabel).addToLeft(JBUI.Panels.simplePanel(classLabel).addToLeft(prefix))
         panel.background = null
     }
 

@@ -39,7 +39,8 @@ class KEditor(val project: Project) : Disposable {
     val inputDocument: Document
     val inputPsiFile: PsiFile
 
-    private val history: MutableList<String> = ArrayList()
+    private val history: MutableList<String>
+        get() = KSettings.instance.getConsoleHistory()
     private var histIndex = -1;
 
     private val viewer = Viewer()
@@ -106,7 +107,6 @@ class KEditor(val project: Project) : Disposable {
 
         write {
             val text = inputDocument.text
-            KSettings.instance.appendConsoleHistory(text)
 
             val commandText = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text))
 
