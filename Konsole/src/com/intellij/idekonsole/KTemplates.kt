@@ -20,9 +20,9 @@ object KTemplates {
             import com.intellij.idekonsole.scripting.*
 
             fun main_exec(){
-            show({
+            show{
                 ${COMMAND}
-            })
+            }
             }""".trimIndent()
 
 
