@@ -4,6 +4,7 @@ import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.idekonsole.KDataHolder
 import com.intellij.idekonsole.KEditor
+import com.intellij.idekonsole.results.KHelpResult
 import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.results.KStdoutResult
 import com.intellij.idekonsole.results.KUsagesResult
@@ -84,7 +85,7 @@ fun PsiPackage.roots(scope: GlobalSearchScope = GlobalSearchScope.projectScope(p
     return files.requireNoNulls().toList();
 }
 
-val help: String = "I'm the help of your dream"
+val help = {KHelpResult("I'm the help of your dream");}
 
 //------------ util
 

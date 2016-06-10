@@ -49,6 +49,19 @@ class KStdoutResult(val text: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
+class KHelpResult(val text: String) : KResult {
+    val panel: JComponent
+
+    init {
+        val label = createLabel(text)
+        label.foreground = JBColor.GRAY
+
+        panel = label
+    }
+
+    override fun getPresentation(): JComponent = panel
+}
+
 class KErrorResult(val error: String) : KResult {
     val panel: JComponent
 

@@ -3,11 +3,13 @@ package com.intellij.idekonsole
 import com.intellij.ide.ui.AntialiasingType
 import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KExceptionResult
+import com.intellij.idekonsole.results.KHelpResult
 import com.intellij.idekonsole.results.KResult
-import com.intellij.idekonsole.scripting.show
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.editor.*
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.FoldingGroup
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.ex.DocumentEx
 import com.intellij.openapi.editor.ex.EditorEx
@@ -20,9 +22,9 @@ import com.intellij.psi.PsiFile
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.ScrollPaneFactory
-import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBEmptyBorder
 import sun.swing.SwingUtilities2
+import java.awt.Color
 import java.awt.Dimension
 import java.util.*
 import javax.swing.JPanel
@@ -59,6 +61,8 @@ class KEditor(val project: Project) : Disposable {
         setText(KTemplates.consoleContent)
 
         scrollPane = ScrollPaneFactory.createScrollPane(viewer)
+        scrollPane.viewportBorder = JBEmptyBorder(5,5,3,3)
+        scrollPane.background = Color.LIGHT_GRAY
         splitter = JBSplitter(true)
         splitter.setHonorComponentsMinimumSize(false)
         splitter.firstComponent = scrollPane
@@ -183,7 +187,7 @@ class KEditor(val project: Project) : Disposable {
         init {
             putClientProperty(SwingUtilities2.AA_TEXT_PROPERTY_KEY, AntialiasingType.getAAHintForSwingComponent())
             background = JBColor.WHITE
-            addHeader()
+            init()
         }
 
         fun add(result: KResult) {
@@ -194,14 +198,15 @@ class KEditor(val project: Project) : Disposable {
         fun clear() {
             results.clear()
             removeAll()
-            addHeader()
+            init()
         }
 
-        private fun addHeader(){
-            add(JBUI.Panels.simplePanel(JBLabel("" +
+        private fun init(){
+            background = Color.LIGHT_GRAY
+            add(KHelpResult("" +
                     "Type an expression or statements to execute.\n" +
                     "Type \"help\" for a list of commands.\n" +
-                    "Press Cmd/Ctrl+Enter to execute command.")))
+                    "Press Cmd/Ctrl+Enter to execute command."))
         }
 
         override fun getPreferredSize(): Dimension? {
