@@ -9,6 +9,7 @@ import com.intellij.openapi.util.AsyncResult
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.util.ExceptionUtil
+import java.lang.reflect.InvocationTargetException
 import java.net.URL
 import java.net.URLClassLoader
 
@@ -31,7 +32,12 @@ object KCommandHandler {
                     val m = clazz.getMethod("main_exec")
 
                     future.setDone(Computable {
-                        val res = m.invoke(null)
+                        val res: Any?
+                        try {
+                            res = m.invoke(null)
+                        } catch (e: InvocationTargetException) {
+                            throw e.targetException
+                        }
                         return@Computable res
                     })
                 } catch(e: Exception) {
