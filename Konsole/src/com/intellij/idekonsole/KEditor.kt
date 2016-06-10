@@ -20,6 +20,8 @@ import com.intellij.psi.PsiFile
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.ScrollPaneFactory
+import com.intellij.ui.components.JBLabel
+import com.intellij.util.ui.JBUI
 import sun.swing.SwingUtilities2
 import java.awt.Dimension
 import java.util.*
@@ -81,9 +83,9 @@ class KEditor(val project: Project) : Disposable {
             }
 
             val fGroup = FoldingGroup.newGroup("one")
-            val region1 = fModel.createFoldRegion(0, KTemplates.getConsoleFolding1End(inputDocument.text), "> ", fGroup, false)
+            val region1 = fModel.createFoldRegion(0, KTemplates.getConsoleFolding1End(inputDocument.text), "-> ", fGroup, false)
             fModel.addFoldRegion(region1!!)
-            val region2 = fModel.createFoldRegion(KTemplates.getConsoleFolding2Start(inputDocument.text), inputDocument.textLength, "", fGroup, false)
+            val region2 = fModel.createFoldRegion(KTemplates.getConsoleFolding2Start(inputDocument.text), inputDocument.textLength, " ", fGroup, false)
             fModel.addFoldRegion(region2!!)
 
             region1.isExpanded = false
@@ -180,6 +182,7 @@ class KEditor(val project: Project) : Disposable {
         init {
             putClientProperty(SwingUtilities2.AA_TEXT_PROPERTY_KEY, AntialiasingType.getAAHintForSwingComponent())
             background = JBColor.WHITE
+            addHeader()
         }
 
         fun add(result: KResult) {
@@ -190,6 +193,14 @@ class KEditor(val project: Project) : Disposable {
         fun clear() {
             results.clear()
             removeAll()
+            addHeader()
+        }
+
+        private fun addHeader(){
+            add(JBUI.Panels.simplePanel(JBLabel("" +
+                    "Type an expression or statements to execute.\n" +
+                    "Type \"help\" for a list of commands.\n" +
+                    "Press Cmd/Ctrl+Enter to execute command.")))
         }
 
         override fun getPreferredSize(): Dimension? {

@@ -26,7 +26,7 @@ object KTemplates {
             }""".trimIndent()
 
 
-    val consoleContent = CONSOLE_CONTENT.replace(COMMAND, MAGIC + " " + MAGIC)
+    val consoleContent = CONSOLE_CONTENT.replace(COMMAND, MAGIC + "      " + MAGIC)
     fun getConsoleCaretOffset(text: String) = text.indexOf(MAGIC) + MAGIC.length;
     fun getConsoleFolding1End(text: String) = getConsoleCaretOffset(text)
     fun getConsoleFolding2Start(text: String) = text.lastIndexOf(MAGIC)
