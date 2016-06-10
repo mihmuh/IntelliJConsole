@@ -29,6 +29,7 @@ object KTemplates {
     val consoleCaretOffset = CONSOLE_CONTENT.indexOf(COMMAND)
     val consoleFolding1End = consoleCaretOffset - 1
     val consoleFolding2Start = consoleCaretOffset + 1
+
     fun getConsoleBlocks(): List<Int> {
         return listOf(consoleFolding1End, consoleFolding2Start)
     }

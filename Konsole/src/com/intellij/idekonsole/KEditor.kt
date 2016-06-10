@@ -33,6 +33,9 @@ class KEditor(val project: Project) : Disposable {
     val inputDocument: Document
     val inputPsiFile: PsiFile
 
+    private val history: MutableList<String> = ArrayList()
+    private var histIndex = -1;
+
     private val viewer = Viewer()
     private val editor: EditorEx
     private val scrollPane: JScrollPane
@@ -95,7 +98,7 @@ class KEditor(val project: Project) : Disposable {
         val text = inputDocument.text
         KSettings.instance.appendConsoleHistory(text)
 
-        val commandText = text.substring(KTemplates.consoleFolding1End, text.length - KTemplates.consoleContent.length + KTemplates.consoleFolding2Start + 1)
+        val commandText = text.substring(KTemplates.consoleFolding1End, text.length - KTemplates.consoleContent.length + KTemplates.consoleFolding2Start - 1)
 
         val callback = KCommandHandler.compile(module, this)
         callback.doWhenDone(Runnable {
@@ -103,6 +106,8 @@ class KEditor(val project: Project) : Disposable {
                 try {
                     viewer.add(KCommandResult(commandText))
                     callback.result.compute()
+                    history.add(text);
+                    histIndex = -1
                     resetInputContent();
                 } catch (e: Exception) {
                     viewer.add(KExceptionResult(e))
@@ -130,9 +135,34 @@ class KEditor(val project: Project) : Disposable {
         return result
     }
 
-    fun clearOutput() {
+    fun clearAll() {
         viewer.clear()
         resetInputContent()
+        history.clear()
+        histIndex = -1;
+    }
+
+    fun nextCmd() {
+        if (history.size == 0) return
+        if (histIndex == -1) return
+        if (histIndex == history.size - 1) {
+            histIndex = -1;
+            setText(KTemplates.consoleContent);
+            return
+        }
+        histIndex++
+        setText(history.get(histIndex));
+    }
+
+    fun prevCmd() {
+        if (history.size == 0) return
+        if (histIndex == -1) {
+            histIndex = history.size - 1;
+        } else if (histIndex > 0) {
+            histIndex--
+        }
+        if (histIndex == -1) return;
+        setText(history.get(histIndex));
     }
 
     private class Viewer() : JPanel() {

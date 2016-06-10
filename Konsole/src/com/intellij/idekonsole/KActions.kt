@@ -14,7 +14,7 @@ class ClearOutputAction : DumbAwareAction("Clear Output", null, AllIcons.Actions
 
     override fun actionPerformed(e: AnActionEvent) {
         val editor = e.getRequiredData(KDataKeys.K_EDITOR)
-        editor.clearOutput()
+        editor.clearAll()
     }
 }
 
@@ -70,12 +70,12 @@ class ConsoleHistoryAction : DumbAwareAction("Show History", null, AllIcons.Gene
 
 class PreviousCommandAction : DumbAwareAction("Previous command", null, AllIcons.Actions.PreviousOccurence){
     override fun actionPerformed(e: AnActionEvent?) {
-        println("prev")
+        e?.getData(KDataKeys.K_EDITOR)?.prevCmd()
     }
 }
 
 class NextCommandAction : DumbAwareAction("Next command", null, AllIcons.Actions.NextOccurence){
-    override fun actionPerformed(next: AnActionEvent?) {
-        println("next")
+    override fun actionPerformed(e: AnActionEvent?) {
+        e?.getData(KDataKeys.K_EDITOR)?.nextCmd()
     }
 }
