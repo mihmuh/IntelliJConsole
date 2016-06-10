@@ -1,5 +1,6 @@
 package com.intellij.idekonsole
 
+import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.util.io.FileUtil
@@ -54,6 +55,7 @@ object KTemplates {
         val psiStubsFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.PSI_STUBS)
         val javaTokensFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.JAVA_TOKEN_STUBS)
         val globalVariablesFile = KIdeaModuleBuilder.createKtClass(module, KSettings.SRC_DIR + KSettings.GLOBAL_VARIABLES)
+        module.project.save()
         DumbService.getInstance(module.project).runWhenSmart {
             FileUtil.writeToFile(VfsUtil.virtualToIoFile(psiStubsFile), generatePsiClassReferences(module).toString())
             FileUtil.writeToFile(VfsUtil.virtualToIoFile(javaTokensFile), generateJavaTokenReferences(module).toString())
