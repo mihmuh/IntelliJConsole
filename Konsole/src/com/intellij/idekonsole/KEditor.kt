@@ -9,6 +9,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.*
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
+import com.intellij.openapi.editor.ex.DocumentEx
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
@@ -53,7 +54,7 @@ class KEditor(val project: Project) : Disposable {
         editor = EditorFactory.getInstance().createEditor(inputDocument, project, inputFile, false) as EditorEx
         EditorActionManager.getInstance().setReadonlyFragmentModificationHandler(inputDocument, {})
 
-        resetInputContent()
+        setText(KTemplates.consoleContent)
 
         scrollPane = ScrollPaneFactory.createScrollPane(viewer)
         splitter = JBSplitter(true)
@@ -63,60 +64,62 @@ class KEditor(val project: Project) : Disposable {
         splitter.proportion = 0.7f
     }
 
-    private fun resetInputContent() {
-        write {
-            inputDocument.setText(KTemplates.consoleContent)
-
-            val blocks = KTemplates.getConsoleBlocks()
-            inputDocument.createGuardedBlock(0, blocks[0])
-            inputDocument.createGuardedBlock(blocks[1], KTemplates.consoleContent.length)
-
-            val fModel = editor.foldingModel
-            fModel.runBatchFoldingOperation({
-                val regions = fModel.allFoldRegions
-                for (region in regions) {
-                    fModel.removeFoldRegion(region)
-                }
-
-                val fGroup = FoldingGroup.newGroup("one")
-                val region1 = fModel.createFoldRegion(0, KTemplates.consoleFolding1End, "> ", fGroup, false)
-                fModel.addFoldRegion(region1!!)
-                val region2 = fModel.createFoldRegion(KTemplates.consoleFolding2Start, inputDocument.textLength, "", fGroup, false)
-                fModel.addFoldRegion(region2!!)
-
-                region1.isExpanded = false
-                region2.isExpanded = false
-            })
-
-            editor.caretModel.moveToOffset(KTemplates.consoleCaretOffset)
+    private fun updateFoldingAndBlocks() {
+        val blocks = KTemplates.getConsoleBlocks(inputDocument.text)
+        for (b in ArrayList((inputDocument as DocumentEx).guardedBlocks)) {
+            inputDocument.removeGuardedBlock(b)
         }
+
+        inputDocument.createGuardedBlock(0, blocks[0])
+        inputDocument.createGuardedBlock(blocks[1], inputDocument.text.length)
+
+        val fModel = editor.foldingModel
+        fModel.runBatchFoldingOperation({
+            val regions = fModel.allFoldRegions
+            for (region in regions) {
+                fModel.removeFoldRegion(region)
+            }
+
+            val fGroup = FoldingGroup.newGroup("one")
+            val region1 = fModel.createFoldRegion(0, KTemplates.getConsoleFolding1End(inputDocument.text), "> ", fGroup, false)
+            fModel.addFoldRegion(region1!!)
+            val region2 = fModel.createFoldRegion(KTemplates.getConsoleFolding2Start(inputDocument.text), inputDocument.textLength, "", fGroup, false)
+            fModel.addFoldRegion(region2!!)
+
+            region1.isExpanded = false
+            region2.isExpanded = false
+        })
+
+        editor.caretModel.moveToOffset(KTemplates.getConsoleCaretOffset(inputDocument.text))
     }
 
     fun handleCommand() {
         if (containsErrors()) return
 
-        val text = inputDocument.text
-        KSettings.instance.appendConsoleHistory(text)
+        write {
+            val text = inputDocument.text
+            KSettings.instance.appendConsoleHistory(text)
 
-        val commandText = text.substring(KTemplates.consoleFolding1End, text.length - KTemplates.consoleContent.length + KTemplates.consoleFolding2Start - 1)
+            val commandText = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text))
 
-        val callback = KCommandHandler.compile(module, this)
-        callback.doWhenDone(Runnable {
-            ApplicationManager.getApplication().invokeLater {
-                try {
-                    viewer.add(KCommandResult(commandText))
-                    callback.result.compute()
-                    history.add(text);
-                    histIndex = -1
-                    resetInputContent();
-                } catch (e: Exception) {
-                    viewer.add(KExceptionResult(e))
+            val callback = KCommandHandler.compile(module, this)
+            callback.doWhenDone(Runnable {
+                ApplicationManager.getApplication().invokeLater {
+                    try {
+                        viewer.add(KCommandResult(commandText))
+                        callback.result.compute()
+                        history.add(text);
+                        histIndex = -1
+                        setText(KTemplates.consoleContent)
+                    } catch (e: Exception) {
+                        viewer.add(KExceptionResult(e))
+                    }
+
+                    scrollPane.validate()
+                    scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
                 }
-
-                scrollPane.validate()
-                scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
-            }
-        })
+            })
+        }
     }
 
     override fun dispose() {
@@ -137,32 +140,36 @@ class KEditor(val project: Project) : Disposable {
 
     fun clearAll() {
         viewer.clear()
-        resetInputContent()
+        setText(KTemplates.consoleContent)
         history.clear()
         histIndex = -1;
     }
 
     fun nextCmd() {
-        if (history.size == 0) return
-        if (histIndex == -1) return
-        if (histIndex == history.size - 1) {
-            histIndex = -1;
-            setText(KTemplates.consoleContent);
-            return
+        write {
+            if (history.size == 0) return@write
+            if (histIndex == -1) return@write
+            if (histIndex == history.size - 1) {
+                histIndex = -1;
+                setText(KTemplates.consoleContent);
+                return@write
+            }
+            histIndex++
+            setText(history.get(histIndex));
         }
-        histIndex++
-        setText(history.get(histIndex));
     }
 
     fun prevCmd() {
-        if (history.size == 0) return
-        if (histIndex == -1) {
-            histIndex = history.size - 1;
-        } else if (histIndex > 0) {
-            histIndex--
+        write {
+            if (history.size == 0) return@write
+            if (histIndex == -1) {
+                histIndex = history.size - 1;
+            } else if (histIndex > 0) {
+                histIndex--
+            }
+            if (histIndex == -1) return@write;
+            setText(history.get(histIndex));
         }
-        if (histIndex == -1) return;
-        setText(history.get(histIndex));
     }
 
     private class Viewer() : JPanel() {
@@ -225,6 +232,7 @@ class KEditor(val project: Project) : Disposable {
     fun setText(selectedText: String) {
         write {
             inputDocument.setText(selectedText)
+            updateFoldingAndBlocks()
         }
     }
 }

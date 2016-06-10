@@ -9,6 +9,7 @@ import com.intellij.psi.search.searches.ClassInheritorsSearch
 
 object KTemplates {
     private val COMMAND = "{COMMAND}"
+    private val MAGIC = "/*MAGIC*/"
 
     private val CONSOLE_CONTENT =
             """
@@ -25,13 +26,13 @@ object KTemplates {
             }""".trimIndent()
 
 
-    val consoleContent = CONSOLE_CONTENT.replace(COMMAND, "")
-    val consoleCaretOffset = CONSOLE_CONTENT.indexOf(COMMAND)
-    val consoleFolding1End = consoleCaretOffset - 1
-    val consoleFolding2Start = consoleCaretOffset + 1
+    val consoleContent = CONSOLE_CONTENT.replace(COMMAND, MAGIC + " " + MAGIC)
+    fun getConsoleCaretOffset(text: String) = text.indexOf(MAGIC) + MAGIC.length;
+    fun getConsoleFolding1End(text: String) = getConsoleCaretOffset(text)
+    fun getConsoleFolding2Start(text: String) = text.lastIndexOf(MAGIC)
 
-    fun getConsoleBlocks(): List<Int> {
-        return listOf(consoleFolding1End, consoleFolding2Start)
+    fun getConsoleBlocks(text: String): List<Int> {
+        return listOf(getConsoleFolding1End(text), getConsoleFolding2Start(text))
     }
 
     fun initHelperClasses(module: Module) {
