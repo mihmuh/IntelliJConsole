@@ -1,6 +1,5 @@
 package com.intellij.idekonsole
 
-import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.util.io.FileUtil

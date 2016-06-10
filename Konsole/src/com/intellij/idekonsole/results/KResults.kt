@@ -113,42 +113,39 @@ class KUsagesResult<T : PsiElement>(val elements: List<T>, val searchQuery: Stri
     }
 
     fun openUsagesView() {
-        val project = project()
-        if (project != null) {
-            val usages = LinkedList<Usage>()
-            elements.filterNotNull().forEach {
-                if (it.isValid) {
-                    usages.add(UsageInfo2UsageAdapter(UsageInfo(it)))
-                } else {
-                    usages.add(UsageAdapter())
-                }
-            }
-            if (refactoring != null) {
-                KUsagesPresentation(project).showUsages(usages, searchQuery, Runnable {
-                    for (it in elements) {
-                        try {
-                            refactoring!!.invoke(it)
-                        } catch (e: Exception) {
-                            val failedIndex = elements.indexOf(it)
-                            label.text = label.text.replace("" + elements.size + " element", "" + failedIndex + " element") + "successfully"
-                            val exception = KExceptionResult(e)
-                            myEditor?.addResultAfter(exception, this)
-                            val remaining = KUsagesResult(elements.subList(failedIndex + 1, elements.size), searchQuery, myEditor, refactoring)
-                            remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
-                            myEditor?.addResultAfter(remaining, exception)
-                            break
-                        }
-                    }
-                    label.removeMouseListener(mouseAdapter)
-                    refactoring = null
-                    label.text = label.text.replace("Refactor", "Refactored")
-                    label.foreground = Color.GRAY
-                    label.font = Font(label.font.name, Font.ITALIC, label.font.size)
-                })
+        val usages = LinkedList<Usage>()
+        elements.filterNotNull().forEach {
+            if (it.isValid) {
+                usages.add(UsageInfo2UsageAdapter(UsageInfo(it)))
             } else {
-                KUsagesPresentation(project).showUsages(usages, searchQuery)
-
+                usages.add(UsageAdapter())
             }
+        }
+        if (refactoring != null) {
+            KUsagesPresentation(project).showUsages(usages, searchQuery, Runnable {
+                for (it in elements) {
+                    try {
+                        refactoring!!.invoke(it)
+                    } catch (e: Exception) {
+                        val failedIndex = elements.indexOf(it)
+                        label.text = label.text.replace("" + elements.size + " element", "" + failedIndex + " element") + "successfully"
+                        val exception = KExceptionResult(e)
+                        myEditor?.addResultAfter(exception, this)
+                        val remaining = KUsagesResult(elements.subList(failedIndex + 1, elements.size), searchQuery, myEditor, refactoring)
+                        remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
+                        myEditor?.addResultAfter(remaining, exception)
+                        break
+                    }
+                }
+                label.removeMouseListener(mouseAdapter)
+                refactoring = null
+                label.text = label.text.replace("Refactor", "Refactored")
+                label.foreground = Color.GRAY
+                label.font = Font(label.font.name, Font.ITALIC, label.font.size)
+            })
+        } else {
+            KUsagesPresentation(project).showUsages(usages, searchQuery)
+
         }
     }
 
@@ -168,15 +165,12 @@ class KExceptionResult(val t: Throwable) : KResult {
         classLabel.background = Color.PINK
         val writer: StringWriter = StringWriter();
         t.printStackTrace(PrintWriter(writer));
-        val project = project()
-        if (project != null) {
-            classLabel.addMouseListener(object : MouseAdapter() {
-                override fun mouseClicked(e: MouseEvent?) {
-                    val dialog: KAnalyzeStacktraceDialog = KAnalyzeStacktraceDialog(project, writer.toString())
-                    dialog.show()
-                }
-            })
-        }
+        classLabel.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                val dialog: KAnalyzeStacktraceDialog = KAnalyzeStacktraceDialog(project, writer.toString())
+                dialog.show()
+            }
+        })
 
         panel = JBUI.Panels.simplePanel(messageLabel).addToLeft(JBUI.Panels.simplePanel(classLabel).addToLeft(prefix))
         panel.background = null

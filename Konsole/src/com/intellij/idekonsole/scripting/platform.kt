@@ -22,7 +22,6 @@ import java.util.stream.Stream
 //----------- find, refactor
 
 fun usages(node: PsiElement, scope: GlobalSearchScope? = KDataHolder.scope!!): List<PsiReference> {
-    val project = project();
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false);
     val processor = CommonProcessors.CollectProcessor<UsageInfo>()
     val psiElements = ArrayUtil.mergeArrays(handler!!.primaryElements, handler.secondaryElements)
@@ -42,8 +41,7 @@ fun <T> List<T>.stream() = J8Util.stream(this);
 fun <T> Stream<T>.toList() : List<T> = collect(Collectors.toList<T>())
 
 fun nodes(scope: GlobalSearchScope = KDataHolder.scope!!): Stream<PsiElement> {
-    val project = project()
-    return project!!.packages().stream()
+    return project.packages().stream()
             .flatMap { it.roots(scope).stream() }
             .flatMap { it.descendants() }.filter { it !is PsiWhiteSpace }
 }
@@ -71,7 +69,8 @@ fun context(): PsiElement? {
     return editor.inputPsiFile;
 }
 
-fun project(): Project = KDataHolder.project!!
+val project: Project
+    get() = KDataHolder.project!!
 
 var scope: GlobalSearchScope
     get() = KDataHolder.scope!!

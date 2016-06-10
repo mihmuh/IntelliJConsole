@@ -14,9 +14,8 @@ import java.util.*
 import java.util.stream.Stream
 
 fun classes(name: String, scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiClass> {
-    val p = project()
     val sn = PsiNameHelper.getShortClassName(name)
-    val candidates = PsiShortNamesCache.getInstance(project()).getClassesByName(sn, scope)
+    val candidates = PsiShortNamesCache.getInstance(project).getClassesByName(sn, scope)
     return candidates.filter {
         val qname = it.qualifiedName
         qname != null && qname.endsWith(name)
@@ -76,13 +75,13 @@ private fun addSubpackages(result: ArrayList<PsiPackage>, psiPackage: PsiPackage
     }
 }
 
-private fun parserFacade() = JavaPsiFacade.getInstance(project()).parserFacade
+private val parserFacade = JavaPsiFacade.getInstance(project).parserFacade
 
-fun String.asClass(): PsiClass = parserFacade().createClassFromText(this, null).assertValid();
+fun String.asClass(): PsiClass = parserFacade.createClassFromText(this, null).assertValid();
 
-fun String.asStatement(): PsiStatement = parserFacade().createStatementFromText(this, null).assertValid();
+fun String.asStatement(): PsiStatement = parserFacade.createStatementFromText(this, null).assertValid();
 
-fun String.asTypeElement(context : PsiElement?): PsiTypeElement = parserFacade().createTypeElementFromText(this, context).assertValid();
+fun String.asTypeElement(context : PsiElement?): PsiTypeElement = parserFacade.createTypeElementFromText(this, context).assertValid();
 
 fun String.asType(context : PsiElement?): PsiType = asTypeElement(context).type;
 
@@ -106,7 +105,7 @@ fun String.asType(): PsiType = asType(null);
 
 fun String.asExpression(): PsiExpression = asExpression(null);
 
-fun String.asExpression(context : PsiElement?): PsiExpression = parserFacade().createExpressionFromText(this, context);
+fun String.asExpression(context : PsiElement?): PsiExpression = parserFacade.createExpressionFromText(this, context);
 
 fun PsiClass.inheritors(): List<PsiClass>{
     return ClassInheritorsSearch.search(this).toList();
