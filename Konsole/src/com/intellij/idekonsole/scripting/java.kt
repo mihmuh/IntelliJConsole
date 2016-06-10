@@ -113,7 +113,15 @@ fun PsiClass.inheritors(): List<PsiClass>{
 }
 
 fun PsiExpression.hasType(type : String) : Boolean {
-    return this.type!!.isAssignableFrom(type.asType(this))
+    try {
+        val thisType = this.type
+        if (thisType != null) {
+            return thisType.isAssignableFrom(type.asType(this))
+        }
+        return false;
+    } catch(e:ParsePsiException) {
+        return false
+    }
 }
 
 fun PsiExpression.replaceWithExpression(newNode: String) {
