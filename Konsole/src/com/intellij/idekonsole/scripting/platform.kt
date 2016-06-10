@@ -21,7 +21,7 @@ import java.util.stream.Stream
 
 //----------- find, refactor
 
-fun usages(node: PsiElement, scope: GlobalSearchScope? = GlobalSearchScope.projectScope(project()!!)): List<PsiReference> {
+fun usages(node: PsiElement, scope: GlobalSearchScope? = KDataHolder.scope!!): List<PsiReference> {
     val project = project();
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false);
     val processor = CommonProcessors.CollectProcessor<UsageInfo>()
@@ -34,14 +34,14 @@ fun usages(node: PsiElement, scope: GlobalSearchScope? = GlobalSearchScope.proje
     return processor.getResults().map { it.reference }.filterNotNull();
 }
 
-fun <T : PsiElement> instances(cls: PsiClassRef<T>, scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): Stream<T> {
+fun <T : PsiElement> instances(cls: PsiClassRef<T>, scope: GlobalSearchScope = KDataHolder.scope!!): Stream<T> {
     return nodes(scope).withKind(cls)
 }
 
 fun <T> List<T>.stream() = J8Util.stream(this);
 fun <T> Stream<T>.toList() : List<T> = collect(Collectors.toList<T>())
 
-fun nodes(scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): Stream<PsiElement> {
+fun nodes(scope: GlobalSearchScope = KDataHolder.scope!!): Stream<PsiElement> {
     val project = project()
     return project!!.packages().stream()
             .flatMap { it.roots(scope).stream() }
@@ -79,7 +79,7 @@ fun Project.modules(): List<Module> {
     return ModuleManager.getInstance(this).modules.filterNotNull().toList();
 }
 
-fun PsiPackage.roots(scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): List<PsiFile> {
+fun PsiPackage.roots(scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiFile> {
     val files = this.getFiles(scope);
     if (files == null) return emptyList();
     return files.requireNoNulls().toList();

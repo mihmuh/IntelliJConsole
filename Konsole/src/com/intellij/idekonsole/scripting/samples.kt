@@ -9,12 +9,14 @@ package com.intellij.idekonsole.scripting
 instances(PsiBinaryExpression).filter { !(it.lOperand.isNullLiteral() || it.rOperand!!.isNullLiteral())&&it.operationTokenType.hasValue(EQEQ) && it.rOperand!!.hasType("String") }
             .refactor { it.replace("${it.lOperand.text}.equals(${it.rOperand!!.text})".asExpression()) }
 
-nstances(PsiBinaryExpression).filter { !(it.lOperand.isNullLiteral() || it.rOperand!!.isNullLiteral()) && it.operationTokenType.hasValue(EQEQ) && it.rOperand!!.hasType("String") }
+instances(PsiBinaryExpression).filter { !(it.lOperand.isNullLiteral() || it.rOperand!!.isNullLiteral()) && it.operationTokenType.hasValue(EQEQ) && it.rOperand!!.hasType("String") }
                 .refactor {
                     it.replace("${it.lOperand.text}.equals(${it.rOperand!!.text})".asExpression())
                     if (it.lOperand.text == it.rOperand!!.text) {
                         throw IllegalStateException("exception")
                     }
                 }
+
+scope = GlobalScope.projectScope()
 
  */
