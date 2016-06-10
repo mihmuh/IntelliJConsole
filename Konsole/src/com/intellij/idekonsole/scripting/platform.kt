@@ -84,7 +84,7 @@ fun PsiPackage.roots(scope: GlobalSearchScope = GlobalSearchScope.projectScope(p
     return files.requireNoNulls().toList();
 }
 
-fun help(): String = "I'm the help of your dream"
+val help: String = "I'm the help of your dream"
 
 //------------ util
 
@@ -175,7 +175,3 @@ fun show(u: PsiReference) {
 fun <T> T.hasValue(e : T) : Boolean {
     return this == e
 }
-
-//todo there should be more "print" functions
-
-//todo internal mode (impossible?)
