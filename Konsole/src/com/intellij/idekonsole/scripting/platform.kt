@@ -12,6 +12,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
+import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
@@ -77,6 +78,12 @@ var scope: GlobalSearchScope
     set(s: GlobalSearchScope) {
         KDataHolder.scope = s
     }
+
+val globalScope: GlobalSearchScope
+    get() = EverythingGlobalScope.allScope(project)
+
+val projectScope: GlobalSearchScope
+    get() = EverythingGlobalScope.projectScope(project)
 
 private fun editor(): KEditor? = KDataHolder.editor
 

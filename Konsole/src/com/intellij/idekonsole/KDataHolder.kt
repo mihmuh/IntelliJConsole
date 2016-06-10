@@ -1,6 +1,7 @@
 package com.intellij.idekonsole
 
 import com.intellij.openapi.project.Project
+import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
 
 // FIXME: we can load separate instances of this class in different MegaLoader's -
@@ -11,7 +12,7 @@ object KDataHolder {
         set(p: Project?) {
             field = p
             if (p != null && scope == null) {
-                scope = GlobalSearchScope.projectScope(p)
+                scope = EverythingGlobalScope.projectScope(p)
             }
         }
     var editor: KEditor? = null
