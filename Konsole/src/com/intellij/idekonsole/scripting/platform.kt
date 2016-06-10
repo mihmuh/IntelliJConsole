@@ -149,7 +149,7 @@ fun show(f: () -> Any?) {
 
 fun show(o: Any?) {
     if (o == null) {
-        //do nothing
+        show("null")
     } else if (o is Unit) {
         //do nothing
     } else if (o is (() -> Any?)) {
