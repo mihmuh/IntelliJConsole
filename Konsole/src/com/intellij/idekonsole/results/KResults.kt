@@ -1,12 +1,16 @@
 package com.intellij.idekonsole.results
 
+import com.intellij.idekonsole.KEditor
 import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
+import com.intellij.usageView.UsageInfo
+import com.intellij.usages.Usage
+import com.intellij.usages.UsageInfo2UsageAdapter
+import com.intellij.usages.impl.UsageAdapter
 import com.intellij.util.ui.JBUI
 import java.awt.Color
 import java.awt.Font
@@ -15,6 +19,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.util.*
 import javax.swing.JComponent
 
 private val LOG = Logger.getInstance(KResult::class.java)
@@ -80,9 +85,10 @@ class KErrorResult(val error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KUsagesResult<T : PsiElement>(val elements: List<T?>, val searchQuery: String, r: ((T) -> Unit)? = null) : KResult {
+class KUsagesResult<T : PsiElement>(val elements: List<T>, val searchQuery: String, editor: KEditor?, r: ((T) -> Unit)? = null) : KResult {
     val panel: JComponent
-    val refactoring: ((T) -> Unit)? = r
+    private var refactoring: ((T) -> Unit)? = r
+    val myEditor: KEditor? = editor
     lateinit var label: JBLabel
     lateinit var mouseAdapter: MouseListener
 
@@ -109,23 +115,42 @@ class KUsagesResult<T : PsiElement>(val elements: List<T?>, val searchQuery: Str
     fun openUsagesView() {
         val project = project()
         if (project != null) {
+            val usages = LinkedList<Usage>()
+            elements.filterNotNull().forEach {
+                if (it.isValid) {
+                    usages.add(UsageInfo2UsageAdapter(UsageInfo(it)))
+                } else {
+                    usages.add(UsageAdapter())
+                }
+            }
             if (refactoring != null) {
-                KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery, refactoring, Runnable {
+                KUsagesPresentation(project).showUsages(usages, searchQuery, Runnable {
+                    for (it in elements) {
+                        try {
+                            refactoring!!.invoke(it)
+                        } catch (e: Exception) {
+                            val failedIndex = elements.indexOf(it)
+                            label.text = label.text.replace("" + elements.size + " element", "" + failedIndex + " element") + "successfully"
+                            val exception = KExceptionResult(e)
+                            myEditor?.addResultAfter(exception, this)
+                            val remaining = KUsagesResult(elements.subList(failedIndex + 1, elements.size), searchQuery, myEditor, refactoring)
+                            remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
+                            myEditor?.addResultAfter(remaining, exception)
+                            break
+                        }
+                    }
                     label.removeMouseListener(mouseAdapter)
+                    refactoring = null
                     label.text = label.text.replace("Refactor", "Refactored")
                     label.foreground = Color.GRAY
                     label.font = Font(label.font.name, Font.ITALIC, label.font.size)
                 })
             } else {
-                KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery)
+                KUsagesPresentation(project).showUsages(usages, searchQuery)
 
             }
         }
     }
-
-    constructor (element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null) : this(listOf(element), searchQuery, refactoring)
-
-    constructor (vararg element: T?, searchQuery: String, refactoring: ((T) -> Unit)? = null) : this(element.toList(), searchQuery, refactoring)
 
     override fun getPresentation(): JComponent = panel
 }

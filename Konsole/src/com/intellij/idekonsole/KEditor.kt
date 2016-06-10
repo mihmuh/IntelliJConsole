@@ -113,7 +113,7 @@ class KEditor(val project: Project) : Disposable {
             val callback = KCommandHandler.compile(module, this)
             callback.doWhenDone(Runnable {
                 ApplicationManager.getApplication().invokeLater {
-                    viewer.add(KCommandResult(commandText))
+                    addResult(KCommandResult(commandText))
                     history.add(text);
                     histIndex = -1
                     setText(KTemplates.consoleContent)
@@ -129,9 +129,6 @@ class KEditor(val project: Project) : Disposable {
                             }
                         }
                     }).start()
-
-                    scrollPane.validate()
-                    scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
                 }
             })
         }
@@ -150,6 +147,20 @@ class KEditor(val project: Project) : Disposable {
 
     fun addResult(result: KResult): KResult {
         viewer.add(result)
+        scrollToEnd()
+        return result
+    }
+
+    fun scrollToEnd() {
+        scrollPane.validate()
+        scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
+    }
+
+    fun addResultAfter(result: KResult, anchor: KResult): KResult {
+        viewer.addAfter(result, anchor)
+        if (viewer.results.last() == result) {
+            scrollToEnd()
+        }
         return result
     }
 
@@ -201,6 +212,19 @@ class KEditor(val project: Project) : Disposable {
         fun add(result: KResult) {
             results.add(result)
             add(result.getPresentation())
+            invalidate()
+            validate()
+        }
+
+        fun addAfter(result: KResult, anchor: KResult) {
+            val indexOfAnchor = results.indexOf(anchor)
+            if (indexOfAnchor < 0) {
+                add(result)
+            } else {
+                val indexToInsert = indexOfAnchor + 1
+                results.add(indexToInsert, result)
+                add(result.getPresentation(), indexToInsert)
+            }
             invalidate()
             validate()
         }

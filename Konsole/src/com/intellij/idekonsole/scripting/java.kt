@@ -1,6 +1,5 @@
 package com.intellij.idekonsole.scripting
 
-import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.impl.scopes.ModulesScope
 import com.intellij.openapi.project.Project

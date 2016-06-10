@@ -22,18 +22,10 @@ class KUsagesPresentation {
         this.project = project
     }
 
-    fun <T:PsiElement>showUsages(elements: List<T>, searchQuery:String, refactoring: ((T) -> Unit)? = null, callback:Runnable? = null){
+    fun showUsages(usages: List<Usage>, searchQuery:String, refactoring: Runnable? = null){
         myUsageViewSettings.loadState(usageViewSettings);
         val usagesViewManager = UsageViewManager.getInstance(project)
 
-        val usages = LinkedList<Usage>()
-        elements.forEach {
-            if (it.isValid) {
-                usages.add(UsageInfo2UsageAdapter(UsageInfo(it)))
-            } else {
-                usages.add(UsageAdapter())
-            }
-        }
 
         val presentation = createPresentation(searchQuery, refactoring != null)
         val usagesView = usagesViewManager.showUsages(emptyArray(), Array(usages.size, { i -> usages[i] }), presentation)
@@ -42,10 +34,7 @@ class KUsagesPresentation {
         //todo deal with checkonly status and write action
         if (refactoring != null) {
             usagesView.addPerformOperationAction({
-                ApplicationManager.getApplication().runWriteAction {
-                    elements.forEach { refactoring.invoke(it) }
-                    callback?.run()
-                }
+                ApplicationManager.getApplication().runWriteAction(refactoring)
             }, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
         }
     }

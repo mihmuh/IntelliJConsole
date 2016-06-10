@@ -121,7 +121,7 @@ private val EMPTY_SEQ = "Empty sequence"
 
 fun <T:PsiElement> show(refactoring: Refactoring<T>){
     if (refactoring.elements.isNotEmpty()) {
-        val result = KUsagesResult(refactoring.elements, "", refactoring.refactoring)
+        val result = KUsagesResult(refactoring.elements, "", editor(), refactoring.refactoring)
         result.openUsagesView()
         return show(result)
     }
@@ -131,10 +131,10 @@ fun <T:PsiElement> show(refactoring: Refactoring<T>){
 fun show(e: List<Any?>) {
     if (e.isNotEmpty()) {
         if (e.all { it is PsiElement }) {
-            return show(KUsagesResult(e.filterIsInstance<PsiElement>(), ""))
+            return show(KUsagesResult(e.filterIsInstance<PsiElement>(), "", editor()))
         }
         if (e.all { it is PsiReference }) {
-            return show(KUsagesResult(e.filterIsInstance<PsiReference>().map { it.element!! }, ""))
+            return show(KUsagesResult(e.filterIsInstance<PsiReference>().map { it.element!! }, "", editor()))
         }
         if (e.all { it is KResult }) {
             return e.forEach { show(it as KResult) }
