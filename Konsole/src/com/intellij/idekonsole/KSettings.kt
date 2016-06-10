@@ -49,6 +49,10 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
         data.CONSOLE_HISTORY.remove(content)
     }
 
+    fun clearConsoleHistory() {
+        data.CONSOLE_HISTORY.clear()
+    }
+
     class Data {
         var CONSOLE_HISTORY = ArrayList<String>()
     }

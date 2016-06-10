@@ -39,7 +39,7 @@ class KEditor(val project: Project) : Disposable {
     val inputDocument: Document
     val inputPsiFile: PsiFile
 
-    private val history: MutableList<String>
+    private val history: List<String>
         get() = KSettings.instance.getConsoleHistory()
     private var histIndex = -1;
 
@@ -114,7 +114,7 @@ class KEditor(val project: Project) : Disposable {
             callback.doWhenDone(Runnable {
                 ApplicationManager.getApplication().invokeLater {
                     addResult(KCommandResult(commandText))
-                    history.add(text);
+                    KSettings.instance.appendConsoleHistory(text)
                     histIndex = -1
                     setText(KTemplates.consoleContent)
                     editor.scrollingModel.scrollVertically(0)
@@ -167,7 +167,7 @@ class KEditor(val project: Project) : Disposable {
     fun clearAll() {
         viewer.clear()
         setText(KTemplates.consoleContent)
-        history.clear()
+        KSettings.instance.clearConsoleHistory()
         histIndex = -1;
     }
 
