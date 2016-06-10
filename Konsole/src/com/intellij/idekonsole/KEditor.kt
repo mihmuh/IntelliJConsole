@@ -110,7 +110,7 @@ class KEditor(val project: Project) : Disposable {
             callback.doWhenDone(Runnable {
                 ApplicationManager.getApplication().invokeLater {
                     val text = inputDocument.text
-                    val commandText = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text)).trim()
+                    val commandText = trimCommand(text)
                     addResult(KCommandResult(commandText))
                     if (histIndex != -1) {
                         history.removeAt(history.size-1)
@@ -266,7 +266,7 @@ class KEditor(val project: Project) : Disposable {
         }
 
         override fun doLayout() {
-            var width = width
+            val width = width
             var y = 0
 
             for (result in results) {
@@ -294,3 +294,5 @@ class KEditor(val project: Project) : Disposable {
         }
     }
 }
+
+fun trimCommand(text: String) = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text)).trim()

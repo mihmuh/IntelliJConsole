@@ -42,13 +42,16 @@ class ConsoleHistoryAction : DumbAwareAction("Show History", null, AllIcons.Gene
         val project = e.project!!
 
         val contentChooser = object : ContentChooser<String>(project, "Console History", false) {
+
+            init {
+                isOKActionEnabled = false
+            }
+
             override fun removeContentAt(content: String) {
                 KSettings.instance.getConsoleHistory().remove(content)
             }
 
-            override fun getStringRepresentationFor(content: String): String {
-                return content
-            }
+            override fun getStringRepresentationFor(content: String): String = trimCommand(content)
 
             override fun getContents(): List<String> {
                 val recentMessages = KSettings.instance.getConsoleHistory()
