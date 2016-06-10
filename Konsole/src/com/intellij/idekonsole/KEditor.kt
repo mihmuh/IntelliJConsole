@@ -108,7 +108,7 @@ class KEditor(val project: Project) : Disposable {
         write {
             val text = inputDocument.text
 
-            val commandText = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text))
+            val commandText = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text)).trim()
 
             val callback = KCommandHandler.compile(module, this)
             callback.doWhenDone(Runnable {
