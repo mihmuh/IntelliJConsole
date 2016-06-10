@@ -17,8 +17,6 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
 import com.intellij.util.CommonProcessors
-import java.util.stream.Collectors
-import java.util.stream.Stream
 
 //----------- find, refactor
 
@@ -34,33 +32,30 @@ fun usages(node: PsiElement, scope: GlobalSearchScope? = KDataHolder.scope!!): L
     return processor.getResults().map { it.reference }.filterNotNull();
 }
 
-fun <T : PsiElement> instances(cls: PsiClassRef<T>, scope: GlobalSearchScope = KDataHolder.scope!!): Stream<T> {
+fun <T : PsiElement> instances(cls: PsiClassRef<T>, scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<T> {
     return nodes(scope).withKind(cls)
 }
 
-fun <T> List<T>.stream() = J8Util.stream(this);
-fun <T> Stream<T>.toList() : List<T> = collect(Collectors.toList<T>())
-
-fun nodes(scope: GlobalSearchScope = KDataHolder.scope!!): Stream<PsiElement> {
-    return project.packages().stream()
-            .flatMap { it.roots(scope).stream() }
+fun nodes(scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<PsiElement> {
+    return project.packages().asSequence()
+            .flatMap { it.roots(scope).asSequence() }
             .flatMap { it.descendants() }.filter { it !is PsiWhiteSpace }
 }
 
-fun PsiElement.descendants(): Stream<PsiElement> {
-    return Stream.concat(Stream.of(this), this.children.toList().stream()
-            .flatMap { it.descendants() })
+fun PsiElement.descendants(): Sequence<PsiElement> {
+    return sequenceOf(this).plus(this.children.asSequence().flatMap { it.descendants() })
 }
 
 class Refactoring<T : PsiElement>(elements: List<T>, refactoring: (T) -> Unit) {
     val elements: List<T> = elements
     val refactoring: (T) -> Unit = refactoring
 }
+
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
     show(Refactoring(this, refactoring))
 }
 
-fun <T : PsiElement> Stream<T>.refactor(refactoring: (T) -> Unit) = toList().refactor(refactoring)
+fun <T : PsiElement> Sequence<T>.refactor(refactoring: (T) -> Unit) = toList().refactor(refactoring)
 
 //------------ project structure navigation
 
@@ -97,7 +92,7 @@ fun PsiPackage.roots(scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiFi
     return files.requireNoNulls().toList();
 }
 
-val help = {KHelpResult("I'm the help of your dream");}
+val help = { KHelpResult("I'm the help of your dream"); }
 
 //------------ util
 
@@ -109,12 +104,8 @@ fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<T> {
     return this.filterIsInstance(k.myRef);
 }
 
-fun <T : PsiElement> Stream<PsiElement>.withKind(k: PsiClassRef<T>): Stream<T> {
+fun <T : PsiElement> Sequence<PsiElement>.withKind(k: PsiClassRef<T>): Sequence<T> {
     return this.filter { k.myRef.isAssignableFrom(it.javaClass) }.map { it as T };
-}
-
-fun show(r: Stream<Any?>) {
-    show(r.toArray().toList())
 }
 
 fun show(r: KResult) {
@@ -131,28 +122,34 @@ fun show(vararg e: PsiElement) {
 
 private val EMPTY_SEQ = "Empty sequence"
 
-fun <T:PsiElement> show(refactoring: Refactoring<T>){
+fun <T : PsiElement> show(refactoring: Refactoring<T>) {
     if (refactoring.elements.isNotEmpty()) {
-        val result = KUsagesResult(refactoring.elements, "", editor(), refactoring.refactoring)
+        val result = KUsagesResult(refactoring.elements.asSequence(), "", editor(), refactoring.refactoring)
         result.openUsagesView()
         return show(result)
     }
     show(EMPTY_SEQ)
 }
 
+fun show(e: Sequence<Any?>) {
+    if (e.first() is PsiElement) {
+        return show(KUsagesResult(e.filterIsInstance<PsiElement>(), "", editor()))
+    }
+    if (e.first() is PsiReference) {
+        return show(KUsagesResult(e.map { (it as PsiReference).element!! }, "", editor()))
+    }
+    if (e.first() is KResult) {
+        return e.forEach { show(it as KResult) }
+    }
+}
+
 fun show(e: List<Any?>) {
     if (e.isNotEmpty()) {
-        if (e.all { it is PsiElement }) {
-            return show(KUsagesResult(e.filterIsInstance<PsiElement>(), "", editor()))
-        }
-        if (e.all { it is PsiReference }) {
-            return show(KUsagesResult(e.filterIsInstance<PsiReference>().map { it.element!! }, "", editor()))
-        }
-        if (e.all { it is KResult }) {
-            return e.forEach { show(it as KResult) }
-        }
+        show(e.asSequence())
+    } else {
+        return show(EMPTY_SEQ)
     }
-    show(EMPTY_SEQ)
+    show(e.toString())
 }
 
 fun show(f: () -> Any?) {
@@ -174,8 +171,8 @@ fun show(o: Any?) {
         show(o)
     } else if (o is PsiElement) {
         show(o)
-    } else if (o is Stream<*>) {
-        show(o as Stream<Any?>)
+    } else if (o is Sequence<*>) {
+        show(o as Sequence<Any?>)
     } else {
         show(o.toString())
     }
@@ -185,6 +182,6 @@ fun show(u: PsiReference) {
     show(u.element!!)
 }
 
-fun <T> T.hasValue(e : T) : Boolean {
+fun <T> T.hasValue(e: T): Boolean {
     return this == e
 }

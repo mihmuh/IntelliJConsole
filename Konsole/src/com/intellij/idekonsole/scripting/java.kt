@@ -11,7 +11,6 @@ import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
-import java.util.stream.Stream
 
 fun classes(name: String, scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiClass> {
     val sn = PsiNameHelper.getShortClassName(name)
@@ -85,9 +84,9 @@ fun String.asTypeElement(context : PsiElement?): PsiTypeElement = parserFacade.c
 
 fun String.asType(context : PsiElement?): PsiType = asTypeElement(context).type;
 
-fun PsiElement.brokenReferences() : Stream<String> {
-    val myBroken = this.references.asList().stream().filter { it.resolve() == null }.map { it.canonicalText }
-    return Stream.concat(myBroken, children.asList().stream().flatMap { it.brokenReferences() })
+fun PsiElement.brokenReferences() : Sequence<String> {
+    val myBroken = this.references.asSequence().filter { it.resolve() == null }.map { it.canonicalText }
+    return myBroken.plus(children.asSequence().flatMap { it.brokenReferences() })
 }
 
 class ParsePsiException(message: String) : RuntimeException(message)
