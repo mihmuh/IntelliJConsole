@@ -22,16 +22,14 @@ import com.intellij.psi.PsiFile
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.ScrollPaneFactory
-import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBEmptyBorder
 import sun.swing.SwingUtilities2
-import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.util.*
-import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JScrollPane
+import javax.swing.SwingUtilities
 
 class KEditor(val project: Project) : Disposable {
     private val splitter: JBSplitter
@@ -64,13 +62,13 @@ class KEditor(val project: Project) : Disposable {
         setText(KTemplates.consoleContent)
 
         scrollPane = ScrollPaneFactory.createScrollPane(viewer)
-        scrollPane.viewportBorder = JBEmptyBorder(5,5,3,3)
+        scrollPane.viewportBorder = JBEmptyBorder(5, 5, 3, 3)
         scrollPane.background = Color.LIGHT_GRAY
 
         splitter = JBSplitter(true)
-        splitter.firstComponent=scrollPane
+        splitter.firstComponent = scrollPane
         editor.gutterComponentEx.parent.isVisible = false
-        splitter.secondComponent=editor.component
+        splitter.secondComponent = editor.component
         splitter.proportion = 0.7f
     }
 
@@ -115,16 +113,22 @@ class KEditor(val project: Project) : Disposable {
             val callback = KCommandHandler.compile(module, this)
             callback.doWhenDone(Runnable {
                 ApplicationManager.getApplication().invokeLater {
-                    try {
-                        viewer.add(KCommandResult(commandText))
-                        callback.result.compute()
-                        history.add(text);
-                        histIndex = -1
-                        setText(KTemplates.consoleContent)
-                        editor.scrollingModel.scrollVertically(0)
-                    } catch (e: Exception) {
-                        viewer.add(KExceptionResult(e))
-                    }
+                    viewer.add(KCommandResult(commandText))
+                    history.add(text);
+                    histIndex = -1
+                    setText(KTemplates.consoleContent)
+                    editor.scrollingModel.scrollVertically(0)
+
+                    Thread({
+                        Thread.sleep(2000)
+                        SwingUtilities.invokeLater {
+                            try {
+                                callback.result.compute()
+                            } catch (e: Exception) {
+                                viewer.add(KExceptionResult(e))
+                            }
+                        }
+                    }).start()
 
                     scrollPane.validate()
                     scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
@@ -207,7 +211,7 @@ class KEditor(val project: Project) : Disposable {
             validate()
         }
 
-        private fun init(){
+        private fun init() {
             background = Color.LIGHT_GRAY
             add(KHelpResult("" +
                     "Type an expression or statements to execute.\n" +

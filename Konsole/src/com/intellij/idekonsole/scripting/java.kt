@@ -13,7 +13,7 @@ import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
 import java.util.stream.Stream
 
-fun classes(name: String, scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): List<PsiClass?> {
+fun classes(name: String, scope: GlobalSearchScope = GlobalSearchScope.projectScope(project()!!)): List<PsiClass> {
     val p = project()
     val sn = PsiNameHelper.getShortClassName(name)
     val candidates = PsiShortNamesCache.getInstance(project()).getClassesByName(sn, scope)
