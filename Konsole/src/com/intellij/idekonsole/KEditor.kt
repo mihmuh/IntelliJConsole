@@ -120,7 +120,7 @@ class KEditor(val project: Project) : Disposable {
                     editor.scrollingModel.scrollVertically(0)
 
                     Thread({
-                        Thread.sleep(2000)
+                        Thread.sleep(1000)
                         SwingUtilities.invokeLater {
                             try {
                                 callback.result.compute()
@@ -201,6 +201,8 @@ class KEditor(val project: Project) : Disposable {
         fun add(result: KResult) {
             results.add(result)
             add(result.getPresentation())
+            invalidate()
+            validate()
         }
 
         fun clear() {
