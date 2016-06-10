@@ -71,7 +71,7 @@ fun context(): PsiElement? {
     return editor.inputPsiFile;
 }
 
-fun project(): Project? = KDataHolder.project
+fun project(): Project = KDataHolder.project!!
 
 private fun editor(): KEditor? = KDataHolder.editor
 
