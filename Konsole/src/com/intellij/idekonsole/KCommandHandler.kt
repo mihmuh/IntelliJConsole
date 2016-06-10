@@ -19,25 +19,27 @@ object KCommandHandler {
         val future = AsyncResult<Computable<Any?>>()
 
         CompilerManager.getInstance(module.project).compile(module, { aborted, errors, warnings, compileContext ->
-            val outputPath = CompilerPaths.getModuleOutputPath(module, false)
-            val url = URL("file://$outputPath/")
-            val classloader = URLClassLoader(arrayOf(url), AllClassesClassLoader(VirtualFileSystem::class.java.classLoader))
-            val clazz = classloader.loadClass("com.intellij.idekonsole.runtime.TestKt");
+            if (!aborted) {
+                val outputPath = CompilerPaths.getModuleOutputPath(module, false)
+                val url = URL("file://$outputPath/")
+                val classloader = URLClassLoader(arrayOf(url), AllClassesClassLoader(VirtualFileSystem::class.java.classLoader))
+                val clazz = classloader.loadClass("com.intellij.idekonsole.runtime.TestKt");
 
-            KDataHolder.project = module.project
-            KDataHolder.editor = editor
-            try {
-                val m = clazz.getMethod("main_exec")
+                KDataHolder.project = module.project
+                KDataHolder.editor = editor
+                try {
+                    val m = clazz.getMethod("main_exec")
 
-                future.setDone(Computable {
-                    val res = m.invoke(null)
-                    return@Computable res
-                })
-            } catch(e: Exception) {
-                future.setDone(Computable<Any?> {
-                    ExceptionUtil.rethrowAllAsUnchecked(e)
-                    return@Computable null
-                })
+                    future.setDone(Computable {
+                        val res = m.invoke(null)
+                        return@Computable res
+                    })
+                } catch(e: Exception) {
+                    future.setDone(Computable<Any?> {
+                        ExceptionUtil.rethrowAllAsUnchecked(e)
+                        return@Computable null
+                    })
+                }
             }
         })
 
