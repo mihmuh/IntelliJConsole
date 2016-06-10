@@ -43,7 +43,7 @@ class ConsoleHistoryAction : DumbAwareAction("Show History", null, AllIcons.Gene
 
         val contentChooser = object : ContentChooser<String>(project, "Console History", false) {
             override fun removeContentAt(content: String) {
-                KSettings.instance.removeConsoleHistory(content)
+                KSettings.instance.getConsoleHistory().remove(content)
             }
 
             override fun getStringRepresentationFor(content: String): String {

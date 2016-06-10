@@ -32,27 +32,18 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
 
     override fun getState(): Data = data
 
-    fun getConsoleHistory() = ArrayList(data.CONSOLE_HISTORY)
+    fun getConsoleHistory() = ConsoleHistory(data.CONSOLE_HISTORY)
 
-    fun appendConsoleHistory(string: String) {
-        data.CONSOLE_HISTORY.remove(string)
-
-        data.CONSOLE_HISTORY.add(string)
-        if (data.CONSOLE_HISTORY.size > 50) {
-            val oldHistory = data.CONSOLE_HISTORY
-            data.CONSOLE_HISTORY = ArrayList<String>()
-            data.CONSOLE_HISTORY.addAll(oldHistory.subList(oldHistory.size - 50, oldHistory.size))
+    class ConsoleHistory(list: MutableList<String>) : MutableList<String> by list {
+        val myList = list
+        fun smartAppend(string: String) {
+            remove(string)
+            add(string)
+            while (size > 50) {
+                myList.removeAt(0)
+            }
         }
     }
-
-    fun removeConsoleHistory(content: String) {
-        data.CONSOLE_HISTORY.remove(content)
-    }
-
-    fun clearConsoleHistory() {
-        data.CONSOLE_HISTORY.clear()
-    }
-
     class Data {
         var CONSOLE_HISTORY = ArrayList<String>()
     }

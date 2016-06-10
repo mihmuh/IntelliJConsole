@@ -39,7 +39,7 @@ class KEditor(val project: Project) : Disposable {
     val inputDocument: Document
     val inputPsiFile: PsiFile
 
-    private val history: List<String>
+    private val history: KSettings.ConsoleHistory
         get() = KSettings.instance.getConsoleHistory()
     private var histIndex = -1;
 
@@ -106,16 +106,17 @@ class KEditor(val project: Project) : Disposable {
         if (containsErrors()) return
 
         write {
-            val text = inputDocument.text
-
-            val commandText = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text)).trim()
-
             val callback = KCommandHandler.compile(module, this)
             callback.doWhenDone(Runnable {
                 ApplicationManager.getApplication().invokeLater {
+                    val text = inputDocument.text
+                    val commandText = text.substring(KTemplates.getConsoleFolding1End(text), KTemplates.getConsoleFolding2Start(text)).trim()
                     addResult(KCommandResult(commandText))
-                    KSettings.instance.appendConsoleHistory(text)
-                    histIndex = -1
+                    if (histIndex != -1) {
+                        history.removeAt(history.size-1)
+                        histIndex = -1
+                    }
+                    history.smartAppend(text)
                     setText(KTemplates.consoleContent)
                     editor.scrollingModel.scrollVertically(0)
 
@@ -167,7 +168,7 @@ class KEditor(val project: Project) : Disposable {
     fun clearAll() {
         viewer.clear()
         setText(KTemplates.consoleContent)
-        KSettings.instance.clearConsoleHistory()
+        history.clear()
         histIndex = -1;
     }
 
@@ -175,11 +176,13 @@ class KEditor(val project: Project) : Disposable {
         write {
             if (history.size == 0) return@write
             if (histIndex == -1) return@write
-            if (histIndex == history.size - 1) {
+            if (histIndex == history.size - 2) {
                 histIndex = -1;
-                setText(KTemplates.consoleContent);
+                setText(history.last());
+                history.remove(history.last())
                 return@write
             }
+            history.set(histIndex, inputDocument.text)
             histIndex++
             setText(history.get(histIndex));
         }
@@ -190,7 +193,9 @@ class KEditor(val project: Project) : Disposable {
             if (history.size == 0) return@write
             if (histIndex == -1) {
                 histIndex = history.size - 1;
+                history.add(inputDocument.text)
             } else if (histIndex > 0) {
+                history.set(histIndex, inputDocument.text)
                 histIndex--
             }
             if (histIndex == -1) return@write;
