@@ -22,11 +22,14 @@ import com.intellij.psi.PsiFile
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.ScrollPaneFactory
+import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBEmptyBorder
 import sun.swing.SwingUtilities2
+import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.util.*
+import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 
@@ -63,10 +66,11 @@ class KEditor(val project: Project) : Disposable {
         scrollPane = ScrollPaneFactory.createScrollPane(viewer)
         scrollPane.viewportBorder = JBEmptyBorder(5,5,3,3)
         scrollPane.background = Color.LIGHT_GRAY
+
         splitter = JBSplitter(true)
-        splitter.setHonorComponentsMinimumSize(false)
-        splitter.firstComponent = scrollPane
-        splitter.secondComponent = editor.component
+        splitter.firstComponent=scrollPane
+        editor.gutterComponentEx.parent.isVisible = false
+        splitter.secondComponent=editor.component
         splitter.proportion = 0.7f
     }
 
@@ -87,9 +91,9 @@ class KEditor(val project: Project) : Disposable {
             }
 
             val fGroup = FoldingGroup.newGroup("one")
-            val region1 = fModel.createFoldRegion(0, KTemplates.getConsoleFolding1End(inputDocument.text), "-> ", fGroup, false)
+            val region1 = fModel.createFoldRegion(0, KTemplates.getConsoleFolding1End(inputDocument.text), "-> ", fGroup, true)
             fModel.addFoldRegion(region1!!)
-            val region2 = fModel.createFoldRegion(KTemplates.getConsoleFolding2Start(inputDocument.text), inputDocument.textLength, " ", fGroup, false)
+            val region2 = fModel.createFoldRegion(KTemplates.getConsoleFolding2Start(inputDocument.text), inputDocument.textLength, " ", fGroup, true)
             fModel.addFoldRegion(region2!!)
 
             region1.isExpanded = false
@@ -199,6 +203,8 @@ class KEditor(val project: Project) : Disposable {
             results.clear()
             removeAll()
             init()
+            invalidate()
+            validate()
         }
 
         private fun init(){
