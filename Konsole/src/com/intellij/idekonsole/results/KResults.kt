@@ -112,6 +112,7 @@ class KUsagesResult<T : PsiElement>(val elements: List<T?>, val searchQuery: Str
             if (refactoring != null) {
                 KUsagesPresentation(project).showUsages(elements.filterNotNull(), searchQuery, refactoring, Runnable {
                     label.removeMouseListener(mouseAdapter)
+                    label.text = label.text.replace("Refactor", "Refactored")
                     label.foreground = Color.GRAY
                     label.font = Font(label.font.name, Font.ITALIC, label.font.size)
                 })
