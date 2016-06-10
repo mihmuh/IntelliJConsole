@@ -238,7 +238,7 @@ class KEditor(val project: Project) : Disposable {
         }
 
         private fun init() {
-            background = Color.LIGHT_GRAY
+            background = KSettings.BACKGROUND_COLOR
             add(KHelpResult("" +
                     "Type an expression or statements to execute.\n" +
                     "Type \"help\" for a list of commands.\n" +

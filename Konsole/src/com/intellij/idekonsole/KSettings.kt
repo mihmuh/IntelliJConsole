@@ -19,7 +19,6 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
         val SRC_DIR = "com/intellij/idekonsole/runtime/";
         val PSI_STUBS = "PsiClassReferences.kt"
         val JAVA_TOKEN_STUBS = "JavaTokenReferences.kt"
-        val GLOBAL_VARIABLES = "GlobalVariables.kt"
         val CONSOLE_FILE_PATH = SRC_DIR + "Test.kt";
 
         val BACKGROUND_COLOR = Color.LIGHT_GRAY
