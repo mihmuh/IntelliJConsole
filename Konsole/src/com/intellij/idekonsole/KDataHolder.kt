@@ -10,7 +10,7 @@ object KDataHolder {
     var project: Project? = null
         set(p: Project?) {
             field = p
-            if (p != null) {
+            if (p != null && scope == null) {
                 scope = GlobalSearchScope.projectScope(p)
             }
         }
