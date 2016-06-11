@@ -2,6 +2,8 @@ package com.intellij.idekonsole.results
 
 import com.intellij.find.FindBundle
 import com.intellij.idekonsole.KSettings
+import com.intellij.idekonsole.scripting.IteratorSequence
+import com.intellij.idekonsole.scripting.evaluate
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.progress.ProgressIndicator

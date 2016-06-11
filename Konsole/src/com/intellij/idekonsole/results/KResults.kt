@@ -2,6 +2,7 @@ package com.intellij.idekonsole.results
 
 import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.scripting.ConsoleOutput
+import com.intellij.idekonsole.scripting.evaluate
 import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ui.ex.MessagesEx
@@ -84,28 +85,6 @@ class KErrorResult(val error: String) : KResult {
     }
 
     override fun getPresentation(): JComponent = panel
-}
-
-class IteratorSequence<out T>(private val iterator: Iterator<T>): Sequence<T> by iterator.asSequence() {
-    fun isEmpty(): Boolean = !iterator.hasNext()
-}
-
-fun <T> Sequence<T>.constrainOnce(): IteratorSequence<T> = IteratorSequence(iterator())
-
-class PartiallyEvaluatedSequence<out T>(val evaluated: List<T>, val remaining: IteratorSequence<T>): Sequence<T> {
-    override fun iterator(): Iterator<T> {
-        return evaluated.asSequence().plus(remaining).iterator()
-    }
-}
-
-fun <T> Sequence<T>.evaluate(time: Int): PartiallyEvaluatedSequence<T> {
-    val head = ArrayList<T>()
-    val startTime = System.currentTimeMillis()
-    val iterator = iterator()
-    while (iterator.hasNext() && System.currentTimeMillis() - startTime < time) {
-        head.add(iterator.next())
-    }
-    return PartiallyEvaluatedSequence(head, IteratorSequence(iterator))
 }
 
 class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: String, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KResult {
