@@ -52,22 +52,22 @@ fun PsiElement.descendants(): Sequence<PsiElement> {
     return sequenceOf(this).plus(this.children.asSequence().flatMap { it.descendants() })
 }
 
-class Refactoring<T : PsiElement>(elements: List<T>, refactoring: (T) -> Unit) {
-    val elements: List<T> = elements
+class Refactoring<T : PsiElement>(elements: Sequence<T>, refactoring: (T) -> Unit) {
+    val elements: Sequence<T> = elements
     val refactoring: (T) -> Unit = refactoring
 }
 
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) =
-        show(Refactoring(this, refactoring))
-
-@JvmName("refactorSequence") fun List<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
-        map { it.resolve() }.filterNotNull().refactor(refactoring)
+        asSequence().refactor(refactoring)
 
 fun <T : PsiElement> Sequence<T>.refactor(refactoring: (T) -> Unit) =
-        toList().refactor(refactoring)
+        show(Refactoring(this, refactoring))
 
-@JvmName("refactorSequence") fun Sequence<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
-        map { it.resolve() }.filterNotNull().toList().refactor(refactoring)
+@JvmName("refactorReferences") fun List<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
+        asSequence().refactor(refactoring)
+
+@JvmName("refactorReferences") fun Sequence<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
+        map { it.resolve() }.filterNotNull().asSequence().refactor(refactoring)
 
 //------------ project structure navigation
 
