@@ -37,28 +37,21 @@ fun meth(classAndMethod: String): PsiMethod? {
 }
 
 fun Project.topPackages(): List<PsiPackage> {
-    return this.modules().map { it.topPackage() }.filterNotNull().distinct()
+    return this.modules().flatMap { it.topPackages() }.filterNotNull().distinct()
 }
 
 fun Project.packages(): List<PsiPackage> {
     return this.topPackages().flatMap { it.allSubpackages(ModulesScope(this.modules().toSet(), this)) }
 }
 
-fun Module.topPackage(): PsiPackage? {
-    val sourceRoots = ModuleRootManager.getInstance(this).getSourceRoots(JavaModuleSourceRootTypes.SOURCES)
-    for (sourceRoot in sourceRoots) {
-        val directory = PsiManager.getInstance(project).findDirectory(sourceRoot)
-        if (directory != null) {
-            return JavaDirectoryService.getInstance().getPackage(directory)
-        }
-    }
-    return null;
+fun Module.topPackages(): List<PsiPackage> {
+    return ModuleRootManager.getInstance(this).getSourceRoots(JavaModuleSourceRootTypes.SOURCES)
+            .map { PsiManager.getInstance(project).findDirectory(it) }.filterNotNull()
+            .map { JavaDirectoryService.getInstance().getPackage(it) }.filterNotNull()
 }
 
 fun Module.packages(): List<PsiPackage> {
-    val tp = this.topPackage()
-    if (tp == null) return emptyList();
-    return tp.allSubpackages(ModulesScope(Collections.singleton(this), this.project));
+    return topPackages().flatMap { it.allSubpackages(ModulesScope(Collections.singleton(this), this.project)) }
 }
 
 private fun PsiPackage.allSubpackages(s: GlobalSearchScope): List<PsiPackage> {
@@ -86,18 +79,18 @@ fun String.asClass(): PsiClass = parserFacade.createClassFromText(this, null).as
 
 fun String.asStatement(): PsiStatement = parserFacade.createStatementFromText(this, null).assertValid();
 
-fun String.asTypeElement(context : PsiElement?): PsiTypeElement = parserFacade.createTypeElementFromText(this, context).assertValid();
+fun String.asTypeElement(context: PsiElement?): PsiTypeElement = parserFacade.createTypeElementFromText(this, context).assertValid();
 
-fun String.asType(context : PsiElement?): PsiType = asTypeElement(context).type;
+fun String.asType(context: PsiElement?): PsiType = asTypeElement(context).type;
 
-fun PsiElement.brokenReferences() : Sequence<String> {
+fun PsiElement.brokenReferences(): Sequence<String> {
     val myBroken = this.references.asSequence().filter { it.resolve() == null }.map { it.canonicalText }
     return myBroken.plus(children.asSequence().flatMap { it.brokenReferences() })
 }
 
 class ParsePsiException(message: String) : RuntimeException(message)
 
-fun <T : PsiElement> T.assertValid() : T {
+fun <T : PsiElement> T.assertValid(): T {
     val brokenReferences = this.brokenReferences().toList()
     if (brokenReferences.isNotEmpty()) {
         val first = brokenReferences.first()
@@ -110,20 +103,20 @@ fun String.asType(): PsiType = asType(null);
 
 fun String.asExpression(): PsiExpression = asExpression(null);
 
-fun String.asExpression(context : PsiElement?): PsiExpression = parserFacade.createExpressionFromText(this, context);
+fun String.asExpression(context: PsiElement?): PsiExpression = parserFacade.createExpressionFromText(this, context);
 
-fun PsiClass.inheritors(): List<PsiClass>{
+fun PsiClass.inheritors(): List<PsiClass> {
     return ClassInheritorsSearch.search(this).toList();
 }
 
-fun PsiExpression.hasType(type : String) : Boolean {
+fun PsiExpression.hasType(type: String): Boolean {
     try {
         val thisType = this.type
         if (thisType != null) {
             return type.asType(this).isAssignableFrom(thisType)
         }
         return false;
-    } catch(e:ParsePsiException) {
+    } catch(e: ParsePsiException) {
         return false
     }
 }
