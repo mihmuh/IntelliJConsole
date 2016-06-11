@@ -18,6 +18,7 @@ object KTemplates {
             import com.intellij.idekonsole.results.*
             import com.intellij.idekonsole.runtime.*
             import com.intellij.idekonsole.scripting.*
+            import com.intellij.idekonsole.scripting.java.*
             import org.jetbrains.kotlin.j2k.*
 
             fun main_exec(){
