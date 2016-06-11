@@ -1,7 +1,7 @@
 package com.intellij.idekonsole.results
 
-import com.intellij.idekonsole.KEditor
 import com.intellij.idekonsole.KSettings
+import com.intellij.idekonsole.scripting.ConsoleOutput
 import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ui.ex.MessagesEx
@@ -108,7 +108,7 @@ fun <T> Sequence<T>.evaluate(time: Int): PartiallyEvaluatedSequence<T> {
     return PartiallyEvaluatedSequence(head, IteratorSequence(iterator))
 }
 
-class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: String, val editor: KEditor?, val refactoring: ((T) -> Unit)? = null) : KResult {
+class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: String, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KResult {
     val panel: JComponent
     val label: JBLabel
     val mouseAdapter: MouseListener
@@ -156,10 +156,10 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
                         val failedIndex = elementsList.indexOf(it)
                         label.text = label.text.replace("" + elementsList.size + " element", "" + failedIndex + " element") + "successfully"
                         val exception = KExceptionResult(e)
-                        editor?.addResultAfter(exception, this)
-                        val remaining = KUsagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, editor, refactoring)
+                        output?.addResultAfter(exception, this)
+                        val remaining = KUsagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, output, refactoring)
                         remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
-                        editor?.addResultAfter(remaining, exception)
+                        output?.addResultAfter(remaining, exception)
                         break
                     }
                 }

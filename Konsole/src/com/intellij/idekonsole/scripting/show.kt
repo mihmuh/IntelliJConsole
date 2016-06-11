@@ -1,14 +1,18 @@
 package com.intellij.idekonsole.scripting
 
 import com.intellij.idekonsole.KDataHolder
-import com.intellij.idekonsole.KEditor
 import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.results.KStdoutResult
 import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 
-private fun editor(): KEditor? = KDataHolder.editor
+private fun editor(): ConsoleOutput? = KDataHolder.editor
+
+interface ConsoleOutput {
+    fun addResult(result: KResult)
+    fun addResultAfter(result: KResult, anchor: KResult)
+}
 
 fun show(r: KResult) {
     editor()?.addResult(r)

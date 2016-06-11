@@ -5,6 +5,7 @@ import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KExceptionResult
 import com.intellij.idekonsole.results.KHelpResult
 import com.intellij.idekonsole.results.KResult
+import com.intellij.idekonsole.scripting.ConsoleOutput
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
@@ -31,7 +32,7 @@ import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.SwingUtilities
 
-class KEditor(val project: Project) : Disposable {
+class KEditor(val project: Project) : Disposable, ConsoleOutput {
     private val splitter: JBSplitter
 
     val module: Module
@@ -147,10 +148,9 @@ class KEditor(val project: Project) : Disposable {
 
     fun getComponent() = splitter
 
-    fun addResult(result: KResult): KResult {
+    override fun addResult(result: KResult) {
         viewer.add(result)
         scrollToEnd()
-        return result
     }
 
     fun scrollToEnd() {
@@ -158,12 +158,11 @@ class KEditor(val project: Project) : Disposable {
         scrollPane.verticalScrollBar.value = scrollPane.verticalScrollBar.maximum
     }
 
-    fun addResultAfter(result: KResult, anchor: KResult): KResult {
+    override fun addResultAfter(result: KResult, anchor: KResult) {
         viewer.addAfter(result, anchor)
         if (viewer.results.last() == result) {
             scrollToEnd()
         }
-        return result
     }
 
     fun clearAll() {
