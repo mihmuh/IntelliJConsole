@@ -27,7 +27,7 @@ fun usages(node: PsiElement, scope: GlobalSearchScope? = KDataHolder.scope!!): L
     for (psiElement in psiElements) {
         handler.processElementUsages(psiElement, processor, options)
     }
-    return processor.results.map { it.reference }.filterNotNull();
+    return processor.results.map { it.reference }.filterNotNull()
 }
 
 fun nodes(scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<PsiElement> =
@@ -41,10 +41,11 @@ fun Module.sourceRoots(): List<PsiDirectory> =
                 .map { PsiManager.getInstance(project).findDirectory(it) }.filterNotNull()
 
 fun files(scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<PsiFile> {
-    return project.modules().asSequence()
+    return project.modules(scope).asSequence()
             .flatMap { it.sourceRoots().asSequence() }
             .flatMap { deepSearch(it, {i -> i.subdirectories.asSequence()}) }
             .flatMap { it.files.asSequence() }
+            .filter { scope.contains(it.virtualFile) }
 }
 
 fun PsiElement.descendants(): Sequence<PsiElement> {
@@ -87,25 +88,24 @@ val projectScope: GlobalSearchScope
 
 private fun editor(): KEditor? = KDataHolder.editor
 
-fun Project.modules(): List<Module> {
-    return ModuleManager.getInstance(this).modules.toList()
-}
+fun Project.modules(scope: GlobalSearchScope = KDataHolder.scope!!): List<Module> =
+        ModuleManager.getInstance(this).modules.filter { scope.isSearchInModuleContent(it) }.toList()
 
 val help = { KHelpResult("I'm the help of your dream"); }
 
 //------------ util
 
-fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> = this.filter { it.name == name };
+fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> =
+        filter { it.name == name }
 
-fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? = this.withName(name).firstOrNull();
+fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? =
+        withName(name).firstOrNull()
 
-fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<T> {
-    return this.filterIsInstance(k.myRef);
-}
+fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<T> =
+        filterIsInstance(k.myRef)
 
-fun <T : PsiElement> Sequence<PsiElement>.withKind(k: PsiClassRef<T>): Sequence<T> {
-    return this.filter { k.myRef.isAssignableFrom(it.javaClass) }.map { it as T };
-}
+fun <T : PsiElement> Sequence<PsiElement>.withKind(k: PsiClassRef<T>): Sequence<T> =
+        filterIsInstance(k.myRef)
 
 fun <T> T.hasValue(e: T): Boolean {
     return this == e
