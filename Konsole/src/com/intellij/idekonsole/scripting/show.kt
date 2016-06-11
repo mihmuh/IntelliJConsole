@@ -7,7 +7,7 @@ import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 
-private fun editor(): ConsoleOutput? = KDataHolder.editor
+private fun output(): ConsoleOutput? = KDataHolder.editor
 
 interface ConsoleOutput {
     fun addResult(result: KResult)
@@ -15,7 +15,7 @@ interface ConsoleOutput {
 }
 
 fun show(r: KResult) {
-    editor()?.addResult(r)
+    output()?.addResult(r)
 }
 
 fun show(s: String) {
@@ -30,7 +30,7 @@ private val EMPTY_SEQ = "Empty sequence"
 
 fun <T : PsiElement> show(refactoring: Refactoring<T>) {
     if (refactoring.elements.isNotEmpty()) {
-        val result = KUsagesResult(refactoring.elements.asSequence(), "", editor(), refactoring.refactoring)
+        val result = KUsagesResult(refactoring.elements.asSequence(), "", output(), refactoring.refactoring)
         result.openUsagesView()
         return show(result)
     }
@@ -39,10 +39,10 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
 
 fun show(e: Sequence<Any?>) {
     if (e.first() is PsiElement) {
-        return show(KUsagesResult(e.filterIsInstance<PsiElement>(), "", editor()))
+        return show(KUsagesResult(e.filterIsInstance<PsiElement>(), "", output()))
     }
     if (e.first() is PsiReference) {
-        return show(KUsagesResult(e.map { (it as PsiReference).element!! }, "", editor()))
+        return show(KUsagesResult(e.map { (it as PsiReference).element!! }, "", output()))
     }
     if (e.first() is KResult) {
         return e.forEach { show(it as KResult) }

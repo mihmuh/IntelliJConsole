@@ -15,7 +15,6 @@ object KTemplates {
             """
             package com.intellij.idekonsole.runtime;
 
-            import com.intellij.idekonsole.results.*
             import com.intellij.idekonsole.runtime.*
             import com.intellij.idekonsole.scripting.*
             import com.intellij.idekonsole.scripting.java.*

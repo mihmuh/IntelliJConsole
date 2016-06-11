@@ -3,7 +3,6 @@ package com.intellij.idekonsole.scripting
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.idekonsole.KDataHolder
-import com.intellij.idekonsole.KEditor
 import com.intellij.idekonsole.results.KHelpResult
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -71,12 +70,6 @@ fun <T : PsiElement> Sequence<T>.refactor(refactoring: (T) -> Unit) =
 
 //------------ project structure navigation
 
-//todo make for-internal-use
-fun context(): PsiElement? {
-    val editor = editor() ?: return null
-    return editor.inputPsiFile
-}
-
 val project: Project
     get() = KDataHolder.project!!
 
@@ -91,8 +84,6 @@ val globalScope: GlobalSearchScope
 
 val projectScope: GlobalSearchScope
     get() = EverythingGlobalScope.projectScope(project)
-
-private fun editor(): KEditor? = KDataHolder.editor
 
 fun Project.modules(scope: GlobalSearchScope = KDataHolder.scope!!): List<Module> =
         ModuleManager.getInstance(this).modules.filter { scope.isSearchInModuleContent(it) }.toList()
