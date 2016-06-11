@@ -28,7 +28,7 @@ fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project:
     for (psiElement in psiElements) {
         handler.processElementUsages(psiElement, processor, options)
     }
-    return processor.results.map { it.reference }.filterNotNull()
+    return processor.results.map { it?.reference }.filterNotNull()
 }
 
 fun nodes(scope: GlobalSearchScope = defaultScope()): Sequence<PsiElement> =
