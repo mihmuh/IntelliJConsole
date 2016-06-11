@@ -12,23 +12,32 @@ import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
-import com.intellij.util.CommonProcessors
+import com.intellij.util.Processor
+import java.util.*
 
 //----------- find, refactor
 
 private fun defaultScope(): GlobalSearchScope = Context.instance().scope
 private fun defaultProject(): Project = Context.instance().project
 
-fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): List<PsiReference> {
+//non concurrent version
+private fun <T> pipeByList(handler: (Processor<T>) -> Unit): Sequence<T> {
+    val buffer = ArrayList<T>()
+    handler(Processor {
+        buffer.add(it)
+    })
+    return buffer.asSequence()
+}
+
+fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): Sequence<PsiReference> {
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false)!!
-    val processor = CommonProcessors.CollectProcessor<UsageInfo>()
     val psiElements = ArrayUtil.mergeArrays(handler.primaryElements, handler.secondaryElements)
     val options = handler.getFindUsagesOptions(null)
     options.searchScope = scope
-    for (psiElement in psiElements) {
-        handler.processElementUsages(psiElement, processor, options)
-    }
-    return processor.results.map { it?.reference }.filterNotNull()
+    return psiElements.asSequence()
+            .flatMap { psiElement -> pipeByList<UsageInfo?> { handler.processElementUsages(psiElement, it, options) } }
+            .map { it?.reference }
+            .filterNotNull()
 }
 
 fun nodes(scope: GlobalSearchScope = defaultScope()): Sequence<PsiElement> =
@@ -44,7 +53,7 @@ fun Module.sourceRoots(project: Project = defaultProject()): List<PsiDirectory> 
 fun files(scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): Sequence<PsiFile> {
     return project.modules(scope).asSequence()
             .flatMap { it.sourceRoots().asSequence() }
-            .flatMap { deepSearch(it, {i -> i.subdirectories.asSequence()}) }
+            .flatMap { deepSearch(it, { i -> i.subdirectories.asSequence() }) }
             .flatMap { it.files.asSequence() }
             .filter { scope.contains(it.virtualFile) }
 }
