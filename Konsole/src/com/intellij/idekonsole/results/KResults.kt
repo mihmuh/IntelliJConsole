@@ -1,14 +1,15 @@
 package com.intellij.idekonsole.results
 
 import com.intellij.idekonsole.KEditor
+import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.ui.ex.MessagesEx
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.usageView.UsageInfo
-import com.intellij.usages.Usage
 import com.intellij.usages.UsageInfo2UsageAdapter
 import com.intellij.usages.impl.UsageAdapter
 import com.intellij.util.ui.JBUI
@@ -85,16 +86,42 @@ class KErrorResult(val error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KUsagesResult<T : PsiElement>(val elements: List<T>, val searchQuery: String, editor: KEditor?, r: ((T) -> Unit)? = null) : KResult {
+class IteratorSequence<out T>(private val iterator: Iterator<T>): Sequence<T> by iterator.asSequence() {
+    fun isEmpty(): Boolean = !iterator.hasNext()
+}
+
+fun <T> Sequence<T>.constrainOnce(): IteratorSequence<T> = IteratorSequence(iterator())
+
+class PartiallyEvaluatedSequence<out T>(val evaluated: List<T>, val remaining: IteratorSequence<T>): Sequence<T> {
+    override fun iterator(): Iterator<T> {
+        return evaluated.asSequence().plus(remaining).iterator()
+    }
+}
+
+fun <T> Sequence<T>.evaluate(time: Int): PartiallyEvaluatedSequence<T> {
+    val head = ArrayList<T>()
+    val startTime = System.currentTimeMillis()
+    val iterator = iterator()
+    while (iterator.hasNext() && System.currentTimeMillis() - startTime < time) {
+        head.add(iterator.next())
+    }
+    return PartiallyEvaluatedSequence(head, IteratorSequence(iterator))
+}
+
+class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: String, val editor: KEditor?, val refactoring: ((T) -> Unit)? = null) : KResult {
     val panel: JComponent
-    private var refactoring: ((T) -> Unit)? = r
-    val myEditor: KEditor? = editor
-    lateinit var label: JBLabel
-    lateinit var mouseAdapter: MouseListener
+    val label: JBLabel
+    val mouseAdapter: MouseListener
+    val elementsEvaluated = elements.evaluate(KSettings.TIME_LIMIT)
 
     init {
-        var elementsString = "" + elements.size + " element"
-        if (elements.size > 1) elementsString += "s"
+        var elementsString = "" + elementsEvaluated.evaluated.size + " element"
+        if (elementsEvaluated.evaluated.size != 1) {
+            elementsString += "s"
+        }
+        if (!elementsEvaluated.remaining.isEmpty()) {
+            elementsString = "More than " + elementsString
+        }
         if (refactoring != null) {
             elementsString = "Refactor " + elementsString
         }
@@ -113,32 +140,30 @@ class KUsagesResult<T : PsiElement>(val elements: List<T>, val searchQuery: Stri
     }
 
     fun openUsagesView() {
-        val usages = LinkedList<Usage>()
-        elements.filterNotNull().forEach {
-            if (it.isValid) {
-                usages.add(UsageInfo2UsageAdapter(UsageInfo(it)))
-            } else {
-                usages.add(UsageAdapter())
-            }
-        }
+        val usages = elements.map { if (it.isValid) UsageInfo2UsageAdapter(UsageInfo(it)) else UsageAdapter() }
         if (refactoring != null) {
-            KUsagesPresentation(project).showUsages(usages, searchQuery, Runnable {
-                for (it in elements) {
+            val dialogAnswer = MessagesEx.showYesNoDialog("Operating with so many results can take more time.\nDo you want to continue?", "Too Many Results", null)
+            if (dialogAnswer != MessagesEx.YES) {
+                return
+            }
+            val elementsList = elementsEvaluated.toList()
+            val usagesList = usages.toList()
+            KUsagesPresentation(project).showUsages(usagesList.asSequence(), searchQuery, Runnable {
+                for (it in elementsList) {
                     try {
-                        refactoring!!.invoke(it)
+                        refactoring.invoke(it)
                     } catch (e: Exception) {
-                        val failedIndex = elements.indexOf(it)
-                        label.text = label.text.replace("" + elements.size + " element", "" + failedIndex + " element") + "successfully"
+                        val failedIndex = elementsList.indexOf(it)
+                        label.text = label.text.replace("" + elementsList.size + " element", "" + failedIndex + " element") + "successfully"
                         val exception = KExceptionResult(e)
-                        myEditor?.addResultAfter(exception, this)
-                        val remaining = KUsagesResult(elements.subList(failedIndex + 1, elements.size), searchQuery, myEditor, refactoring)
+                        editor?.addResultAfter(exception, this)
+                        val remaining = KUsagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, editor, refactoring)
                         remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
-                        myEditor?.addResultAfter(remaining, exception)
+                        editor?.addResultAfter(remaining, exception)
                         break
                     }
                 }
                 label.removeMouseListener(mouseAdapter)
-                refactoring = null
                 label.text = label.text.replace("Refactor", "Refactored")
                 label.foreground = Color.GRAY
                 label.font = Font(label.font.name, Font.ITALIC, label.font.size)

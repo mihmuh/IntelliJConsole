@@ -22,6 +22,8 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
         val CONSOLE_FILE_PATH = SRC_DIR + "Test.kt";
 
         val BACKGROUND_COLOR = Color.LIGHT_GRAY
+
+        val TIME_LIMIT = 100
     }
 
     var data = Data()
