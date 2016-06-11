@@ -40,6 +40,7 @@ class KEditor(val project: Project) : Disposable, ConsoleOutput {
     val inputFile: VirtualFile
     val inputDocument: Document
     val inputPsiFile: PsiFile
+    val context = Context(project = project, output = this)
 
     private val history: KSettings.ConsoleHistory
         get() = KSettings.instance.getConsoleHistory()
@@ -109,7 +110,7 @@ class KEditor(val project: Project) : Disposable, ConsoleOutput {
         if (containsErrors()) return
 
         write {
-            val callback = KCommandHandler.compile(module, Context(project = project, output = this))
+            val callback = KCommandHandler.compile(module, context)
             callback.doWhenDone(Runnable {
                 ApplicationManager.getApplication().invokeLater {
                     val text = inputDocument.text
