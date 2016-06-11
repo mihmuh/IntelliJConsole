@@ -57,11 +57,17 @@ class Refactoring<T : PsiElement>(elements: List<T>, refactoring: (T) -> Unit) {
     val refactoring: (T) -> Unit = refactoring
 }
 
-fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) {
-    show(Refactoring(this, refactoring))
-}
+fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) =
+        show(Refactoring(this, refactoring))
 
-fun <T : PsiElement> Sequence<T>.refactor(refactoring: (T) -> Unit) = toList().refactor(refactoring)
+@JvmName("refactorSequence") fun List<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
+        map { it.resolve() }.filterNotNull().refactor(refactoring)
+
+fun <T : PsiElement> Sequence<T>.refactor(refactoring: (T) -> Unit) =
+        toList().refactor(refactoring)
+
+@JvmName("refactorSequence") fun Sequence<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
+        map { it.resolve() }.filterNotNull().toList().refactor(refactoring)
 
 //------------ project structure navigation
 
