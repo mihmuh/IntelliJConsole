@@ -11,12 +11,14 @@ import com.intellij.idekonsole.results.KUsagesResult
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.psi.*
 import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
 import com.intellij.util.CommonProcessors
+import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 
 //----------- find, refactor
 
@@ -36,10 +38,28 @@ fun <T : PsiElement> instances(cls: PsiClassRef<T>, scope: GlobalSearchScope = K
     return nodes(scope).withKind(cls)
 }
 
+fun Module.sourceRoots(): List<PsiDirectory> {
+    val sourceRoots = ModuleRootManager.getInstance(this).getSourceRoots(JavaModuleSourceRootTypes.SOURCES)
+    return sourceRoots.map { PsiManager.getInstance(project).findDirectory(it) }.filterNotNull()
+}
+
+fun <T> deepSearch(seed: T, f: (T) -> Sequence<T>): Sequence<T> {
+    return sequenceOf(seed) + f(seed).flatMap { deepSearch(it, f) }
+}
+
+fun <T> wideSearch(seed: Sequence<T>, f: (T) -> Sequence<T>): Sequence<T> {
+    return seed + wideSearch(seed.flatMap(f), f)
+}
+
 fun nodes(scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<PsiElement> {
-    return project.packages().asSequence()
-            .flatMap { it.roots(scope).asSequence() }
-            .flatMap { it.descendants() }.filter { it !is PsiWhiteSpace }
+    return files(scope).flatMap { it.descendants() }
+}
+
+fun files(scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<PsiFile> {
+    return project.modules().asSequence()
+            .flatMap { it.sourceRoots().asSequence() }
+            .flatMap { deepSearch(it, {i -> i.subdirectories.asSequence()}) }
+            .flatMap { it.files.asSequence() }
 }
 
 fun PsiElement.descendants(): Sequence<PsiElement> {
@@ -83,13 +103,7 @@ val projectScope: GlobalSearchScope
 private fun editor(): KEditor? = KDataHolder.editor
 
 fun Project.modules(): List<Module> {
-    return ModuleManager.getInstance(this).modules.filterNotNull().toList();
-}
-
-fun PsiPackage.roots(scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiFile> {
-    val files = this.getFiles(scope);
-    if (files == null) return emptyList();
-    return files.requireNoNulls().toList();
+    return ModuleManager.getInstance(this).modules.filterNotNull();
 }
 
 val help = { KHelpResult("I'm the help of your dream"); }

@@ -67,6 +67,12 @@ private fun PsiPackage.allSubpackages(s: GlobalSearchScope): List<PsiPackage> {
     return result;
 }
 
+fun PsiPackage.roots(scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiFile> {
+    val files = this.getFiles(scope);
+    if (files == null) return emptyList();
+    return files.requireNoNulls().toList();
+}
+
 private fun addSubpackages(result: ArrayList<PsiPackage>, psiPackage: PsiPackage, s: GlobalSearchScope) {
     result.add(psiPackage);
     for (p in psiPackage.getSubPackages(s)) {
