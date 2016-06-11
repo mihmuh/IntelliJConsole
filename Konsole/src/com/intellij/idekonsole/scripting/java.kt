@@ -12,36 +12,32 @@ import com.intellij.psi.search.searches.ClassInheritorsSearch
 import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
 
-fun classes(name: String, scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiClass> {
+fun classes(name: String, scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<PsiClass> {
     val sn = PsiNameHelper.getShortClassName(name)
     val candidates = PsiShortNamesCache.getInstance(project).getClassesByName(sn, scope)
-    return candidates.filter {
-        val qname = it.qualifiedName
-        qname != null && qname.endsWith(name)
+    return candidates.asSequence().filter {
+        it.qualifiedName?.endsWith(name) ?: false
     }
 }
 
-fun cls(name: String): PsiClass? = classes(name).filterNotNull().firstOrNull()
+fun cls(name: String): PsiClass? = classes(name).firstOrNull()
 
-fun methods(classAndMethod: String): List<PsiMethod> {
+fun methods(classAndMethod: String): Sequence<PsiMethod> {
     val i = classAndMethod.lastIndexOf(".")
-    assert(i != -1);
+    if (i == -1) throw IllegalArgumentException("Could not parse method name: `$classAndMethod`. Expected format: `Class.method`")
     val className = classAndMethod.substring(0, i)
     val methodName = classAndMethod.substring(i + 1)
-    val m = classes(className).filterNotNull().flatMap { it.findMethodsByName(methodName, false).toList() };
-    return m.toList();
+    return classes(className).flatMap { it.findMethodsByName(methodName, false).toList().asSequence() }
 }
 
-fun meth(classAndMethod: String): PsiMethod? {
-    return methods(classAndMethod).first()
-}
+fun meth(classAndMethod: String): PsiMethod? = methods(classAndMethod).firstOrNull()
 
 fun Project.topPackages(): List<PsiPackage> {
-    return this.modules().flatMap { it.topPackages() }.filterNotNull().distinct()
+    return this.modules().flatMap { it.topPackages() }.distinct()
 }
 
-fun Project.packages(): List<PsiPackage> {
-    return this.topPackages().flatMap { it.allSubpackages(ModulesScope(this.modules().toSet(), this)) }
+fun Project.packages(s: GlobalSearchScope = scope): List<PsiPackage> {
+    return topPackages().flatMap { it.allSubpackages(s).toList() }
 }
 
 fun Module.topPackages(): List<PsiPackage> {
@@ -51,26 +47,11 @@ fun Module.topPackages(): List<PsiPackage> {
 }
 
 fun Module.packages(): List<PsiPackage> {
-    return topPackages().flatMap { it.allSubpackages(ModulesScope(Collections.singleton(this), this.project)) }
+    return topPackages().flatMap { it.allSubpackages(ModulesScope(Collections.singleton(this), this.project)).toList() }
 }
 
-private fun PsiPackage.allSubpackages(s: GlobalSearchScope): List<PsiPackage> {
-    val result = ArrayList<PsiPackage>()
-    addSubpackages(result, this, s);
-    return result;
-}
-
-fun PsiPackage.roots(scope: GlobalSearchScope = KDataHolder.scope!!): List<PsiFile> {
-    val files = this.getFiles(scope);
-    if (files == null) return emptyList();
-    return files.requireNoNulls().toList();
-}
-
-private fun addSubpackages(result: ArrayList<PsiPackage>, psiPackage: PsiPackage, s: GlobalSearchScope) {
-    result.add(psiPackage);
-    for (p in psiPackage.getSubPackages(s)) {
-        addSubpackages(result, p, s)
-    }
+private fun PsiPackage.allSubpackages(s: GlobalSearchScope): Sequence<PsiPackage> {
+    return deepSearch(this, {p -> p.getSubPackages(s).asSequence()})
 }
 
 private val parserFacade = JavaPsiFacade.getInstance(project).parserFacade
