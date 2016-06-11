@@ -1,10 +1,11 @@
 package com.intellij.idekonsole.results
 
+import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.scripting.ConsoleOutput
 import com.intellij.idekonsole.scripting.evaluate
-import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ex.MessagesEx
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
@@ -21,7 +22,6 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.util.*
 import javax.swing.JComponent
 
 private val LOG = Logger.getInstance(KResult::class.java)
@@ -31,7 +31,7 @@ private fun createLabel(text: String): JBLabel {
     return JBLabel(content).setCopyable(true)
 }
 
-class KCommandResult(val text: String) : KResult {
+class KCommandResult(text: String) : KResult {
     val panel: JComponent
 
     init {
@@ -87,7 +87,11 @@ class KErrorResult(val error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: String, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KResult {
+abstract class KPostponingResult: KResult {
+
+}
+
+class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: String, val project: Project, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KPostponingResult() {
     val panel: JComponent
     val label: JBLabel
     val mouseAdapter: MouseListener
@@ -108,10 +112,10 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
         label.foreground = Color.BLUE;
 
         //todo one node should be shown as a ref
+
+        val wrappedOpenUsagesView = Context.wrapCallback({ openUsagesView() })
         mouseAdapter = object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent?) {
-                openUsagesView()
-            }
+            override fun mouseClicked(e: MouseEvent?) = wrappedOpenUsagesView.invoke()
         }
         label.addMouseListener(mouseAdapter)
         panel = JBUI.Panels.simplePanel(label)
@@ -134,9 +138,9 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
                     } catch (e: Exception) {
                         val failedIndex = elementsList.indexOf(it)
                         label.text = label.text.replace("" + elementsList.size + " element", "" + failedIndex + " element") + "successfully"
-                        val exception = KExceptionResult(e)
+                        val exception = KExceptionResult(project, e)
                         output?.addResultAfter(exception, this)
-                        val remaining = KUsagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, output, refactoring)
+                        val remaining = KUsagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, project, output, refactoring)
                         remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
                         output?.addResultAfter(remaining, exception)
                         break
@@ -156,7 +160,7 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
     override fun getPresentation(): JComponent = panel
 }
 
-class KExceptionResult(val t: Throwable) : KResult {
+class KExceptionResult(val project: Project, t: Throwable) : KResult {
     val panel: JComponent
     val DARK_BLUE = Color(0, 0, 128)
 

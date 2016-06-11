@@ -1,5 +1,6 @@
 package com.intellij.idekonsole
 
+import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.results.KResult
 import com.intellij.openapi.compiler.CompilerManager
 import com.intellij.openapi.compiler.CompilerPaths
@@ -16,7 +17,7 @@ import java.net.URLClassLoader
 object KCommandHandler {
     private val LOG = Logger.getInstance(KResult::class.java)
 
-    fun compile(module: Module, editor: KEditor): AsyncResult<Computable<Any?>> {
+    fun compile(module: Module, context: Context): AsyncResult<Computable<Any?>> {
         val future = AsyncResult<Computable<Any?>>()
 
         CompilerManager.getInstance(module.project).compile(module, { aborted, errors, warnings, compileContext ->
@@ -26,15 +27,13 @@ object KCommandHandler {
                 val classloader = URLClassLoader(arrayOf(url), AllClassesClassLoader(VirtualFileSystem::class.java.classLoader))
                 val clazz = classloader.loadClass("com.intellij.idekonsole.runtime.TestKt");
 
-                KDataHolder.project = module.project
-                KDataHolder.editor = editor
                 try {
                     val m = clazz.getMethod("main_exec")
 
                     future.setDone(Computable {
-                        val res: Any?
+                        var res: Any? = null
                         try {
-                            res = m.invoke(null)
+                            context.execute { res = m.invoke(null) }
                         } catch (e: InvocationTargetException) {
                             throw e.targetException
                         }

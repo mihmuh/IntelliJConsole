@@ -16,6 +16,7 @@ object KTemplates {
             package com.intellij.idekonsole.runtime;
 
             import com.intellij.idekonsole.runtime.*
+            import com.intellij.idekonsole.context.aliases.*
             import com.intellij.idekonsole.scripting.*
             import com.intellij.idekonsole.scripting.java.*
             import org.jetbrains.kotlin.j2k.*

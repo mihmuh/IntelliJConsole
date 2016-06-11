@@ -1,9 +1,9 @@
 package com.intellij.idekonsole.scripting.java
 
-import com.intellij.idekonsole.scripting.project
+import com.intellij.idekonsole.context.Context
 import com.intellij.psi.*
 
-private val parserFacade = JavaPsiFacade.getInstance(project).parserFacade
+private fun parserFacade() = JavaPsiFacade.getInstance(Context.instance().project).parserFacade
 
 private fun PsiElement.brokenReferences(): Sequence<String> {
     val myBroken = this.references.asSequence().filter { it.resolve() == null }.map { it.canonicalText }
@@ -21,15 +21,15 @@ private fun <T : PsiElement> T.assertValid(): T {
     return this
 }
 
-fun String.asClass(context: PsiElement? = null): PsiClass = parserFacade.createClassFromText(this, context).assertValid();
+fun String.asClass(context: PsiElement? = null): PsiClass = parserFacade().createClassFromText(this, context).assertValid()
 
-fun String.asStatement(context: PsiElement? = null): PsiStatement = parserFacade.createStatementFromText(this, context).assertValid();
+fun String.asStatement(context: PsiElement? = null): PsiStatement = parserFacade().createStatementFromText(this, context).assertValid()
 
-fun String.asTypeElement(context: PsiElement? = null): PsiTypeElement = parserFacade.createTypeElementFromText(this, context).assertValid();
+fun String.asTypeElement(context: PsiElement? = null): PsiTypeElement = parserFacade().createTypeElementFromText(this, context).assertValid()
 
-fun String.asType(context: PsiElement? = null): PsiType = asTypeElement(context).type;
+fun String.asType(context: PsiElement? = null): PsiType = asTypeElement(context).type
 
-fun String.asExpression(context: PsiElement? = null): PsiExpression = parserFacade.createExpressionFromText(this, context).assertValid();
+fun String.asExpression(context: PsiElement? = null): PsiExpression = parserFacade().createExpressionFromText(this, context).assertValid()
 
 fun PsiExpression.hasType(type: String): Boolean {
     try {
@@ -37,7 +37,7 @@ fun PsiExpression.hasType(type: String): Boolean {
         if (thisType != null) {
             return type.asType(this).isAssignableFrom(thisType)
         }
-        return false;
+        return false
     } catch (e: ParsePsiException) {
         return false
     }

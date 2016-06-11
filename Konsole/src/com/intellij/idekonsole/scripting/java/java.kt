@@ -1,9 +1,8 @@
 package com.intellij.idekonsole.scripting.java
 
-import com.intellij.idekonsole.KDataHolder
+import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.scripting.deepSearch
 import com.intellij.idekonsole.scripting.modules
-import com.intellij.idekonsole.scripting.project
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.impl.scopes.ModulesScope
 import com.intellij.openapi.project.Project
@@ -15,7 +14,11 @@ import com.intellij.psi.search.searches.ClassInheritorsSearch
 import org.jetbrains.jps.model.java.JavaModuleSourceRootTypes
 import java.util.*
 
-fun classes(name: String, scope: GlobalSearchScope = KDataHolder.scope!!): Sequence<PsiClass> {
+private fun defaultScope(): GlobalSearchScope = Context.instance().scope
+private fun defaultProject(): Project = Context.instance().project
+
+
+fun classes(name: String, scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): Sequence<PsiClass> {
     val sn = PsiNameHelper.getShortClassName(name)
     val candidates = PsiShortNamesCache.getInstance(project).getClassesByName(sn, scope)
     return candidates.asSequence().filter {
@@ -23,8 +26,8 @@ fun classes(name: String, scope: GlobalSearchScope = KDataHolder.scope!!): Seque
     }
 }
 
-fun cls(name: String): PsiClass? =
-        classes(name).firstOrNull()
+fun cls(name: String, scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): PsiClass? =
+        classes(name, scope, project).firstOrNull()
 
 fun methods(classAndMethod: String): Sequence<PsiMethod> {
     val i = classAndMethod.lastIndexOf(".")
@@ -44,7 +47,7 @@ private fun PsiPackage.allSubpackages(s: GlobalSearchScope): Sequence<PsiPackage
 fun Project.topPackages(): List<PsiPackage> =
         modules().flatMap { it.topPackages() }.distinct()
 
-fun Project.packages(s: GlobalSearchScope = KDataHolder.scope!!): List<PsiPackage> =
+fun Project.packages(s: GlobalSearchScope = defaultScope()): List<PsiPackage> =
         topPackages().flatMap { it.allSubpackages(s).toList() }
 
 fun Module.topPackages(): List<PsiPackage> =

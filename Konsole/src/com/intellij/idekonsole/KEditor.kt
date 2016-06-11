@@ -1,6 +1,7 @@
 package com.intellij.idekonsole
 
 import com.intellij.ide.ui.AntialiasingType
+import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.results.KCommandResult
 import com.intellij.idekonsole.results.KExceptionResult
 import com.intellij.idekonsole.results.KHelpResult
@@ -108,7 +109,7 @@ class KEditor(val project: Project) : Disposable, ConsoleOutput {
         if (containsErrors()) return
 
         write {
-            val callback = KCommandHandler.compile(module, this)
+            val callback = KCommandHandler.compile(module, Context(project = project, output = this))
             callback.doWhenDone(Runnable {
                 ApplicationManager.getApplication().invokeLater {
                     val text = inputDocument.text
@@ -128,7 +129,7 @@ class KEditor(val project: Project) : Disposable, ConsoleOutput {
                             try {
                                 callback.result.compute()
                             } catch (e: Exception) {
-                                viewer.add(KExceptionResult(e))
+                                viewer.add(KExceptionResult(project, e))
                             }
                         }
                     }).start()
