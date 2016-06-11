@@ -68,7 +68,7 @@ fun <T : PsiElement> Sequence<T>.refactor(refactoring: (T) -> Unit) = toList().r
 //todo make for-internal-use
 fun context(): PsiElement? {
     val editor = editor() ?: return null
-    return editor.inputPsiFile;
+    return editor.inputPsiFile
 }
 
 val project: Project
@@ -91,7 +91,7 @@ private fun editor(): KEditor? = KDataHolder.editor
 fun Project.modules(scope: GlobalSearchScope = KDataHolder.scope!!): List<Module> =
         ModuleManager.getInstance(this).modules.filter { scope.isSearchInModuleContent(it) }.toList()
 
-val help = { KHelpResult("I'm the help of your dream"); }
+val help = { KHelpResult("I'm the help of your dream") }
 
 //------------ util
 
