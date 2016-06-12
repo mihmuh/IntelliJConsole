@@ -6,94 +6,17 @@ import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.results.KHelpResult
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.ArrayUtil
-import com.intellij.util.Processor
-import com.intellij.util.containers.ContainerUtil
-import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 
 //----------- find, refactor
 
 private fun defaultScope(): GlobalSearchScope = Context.instance().scope
 private fun defaultProject(): Project = Context.instance().project
-
-private fun <T> concurrentPipe(project: Project, handler: (Processor<T>) -> Unit): Sequence<T> {
-    val buffer = ContainerUtil.createConcurrentList<T>()
-    val lock = Object()
-    var finished: Boolean = false
-    val waiting = AtomicInteger(0)
-
-    ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Searching") {
-        override fun run(indicator: ProgressIndicator) {
-            handler.invoke(Processor<T> {
-                buffer.add(it)
-                if (waiting.get() > 0) {
-                    synchronized(lock) {
-                        if (waiting.get() > 0) {
-                            lock.notifyAll()
-                        }
-                    }
-                }
-                true
-            })
-            finished = true
-            if (waiting.get() > 0) {
-                synchronized(lock) {
-                    if (waiting.get() > 0) {
-                        lock.notifyAll()
-                    }
-                }
-            }
-        }
-    })
-    return object : Sequence<T> {
-        override fun iterator(): Iterator<T> {
-            var nextIndex: Int = 0
-            return object : Iterator<T> {
-                override fun hasNext(): Boolean {
-                    assert(nextIndex <= buffer.size)
-                    if (nextIndex < buffer.size) {
-                        return true
-                    } else if (finished) {
-                        return false
-                    }
-                    synchronized(lock) {
-                        waiting.incrementAndGet()
-                        while (nextIndex == buffer.size && !finished) {
-                            lock.wait()
-                        }
-                        waiting.decrementAndGet()
-                    }
-                    return nextIndex < buffer.size
-                }
-
-                override fun next(): T {
-                    if (!hasNext()) {
-                        throw NoSuchElementException()
-                    }
-                    return buffer[nextIndex++]
-                }
-            }
-        }
-    }
-}
-
-//non concurrent version
-private fun <T> pipeByList(handler: (Processor<T>) -> Unit): Sequence<T> {
-    val buffer = ArrayList<T>()
-    handler(Processor {
-        buffer.add(it)
-    })
-    return buffer.asSequence()
-}
 
 fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): Sequence<PsiReference> {
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false)!!
