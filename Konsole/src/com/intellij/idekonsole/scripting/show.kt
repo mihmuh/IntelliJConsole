@@ -49,15 +49,15 @@ fun show(e: Sequence<Any?>) {
     if (e.first() is KResult) {
         return e.forEach { show(it as KResult) }
     }
+    show(e.toString())
 }
 
 fun show(e: List<Any?>) {
     if (e.isNotEmpty()) {
-        show(e.asSequence())
+        return show(e.asSequence())
     } else {
         return show(EMPTY_SEQ)
     }
-    show(e.toString())
 }
 
 fun show(f: () -> Any?) {
