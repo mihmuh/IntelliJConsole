@@ -1,9 +1,9 @@
 package com.intellij.idekonsole.results
 
-import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.KSettings
+import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.scripting.ConsoleOutput
-import com.intellij.idekonsole.scripting.evaluate
+import com.intellij.idekonsole.scripting.cacheHead
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ex.MessagesEx
@@ -43,7 +43,7 @@ class KCommandResult(text: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KStdoutResult(val text: String) : KResult {
+class KStdoutResult(text: String) : KResult {
     val panel: JComponent
 
     init {
@@ -56,7 +56,7 @@ class KStdoutResult(val text: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KHelpResult(val text: String) : KResult {
+class KHelpResult(text: String) : KResult {
     val panel: JComponent
 
     init {
@@ -69,7 +69,7 @@ class KHelpResult(val text: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-class KErrorResult(val error: String) : KResult {
+class KErrorResult(error: String) : KResult {
     val panel: JComponent
 
     init {
@@ -95,21 +95,21 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
     val panel: JComponent
     val label: JBLabel
     val mouseAdapter: MouseListener
-    val elementsEvaluated = elements.evaluate(KSettings.TIME_LIMIT)
+    val elementsEvaluated = elements.cacheHead(KSettings.TIME_LIMIT)
 
     init {
         var elementsString = "" + elementsEvaluated.evaluated.size + " element"
         if (elementsEvaluated.evaluated.size != 1) {
             elementsString += "s"
         }
-        if (!elementsEvaluated.remaining.isEmpty()) {
+        if (!elementsEvaluated.hasRemaining) {
             elementsString = "More than " + elementsString
         }
         if (refactoring != null) {
             elementsString = "Refactor " + elementsString
         }
-        label = JBLabel("<html><a>" + elementsString + "</a></html>")
-        label.foreground = Color.BLUE;
+        label = JBLabel("<html><a>$elementsString</a></html>")
+        label.foreground = Color.BLUE
 
         //todo one node should be shown as a ref
 
@@ -129,7 +129,7 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
             if (dialogAnswer != MessagesEx.YES) {
                 return
             }
-            val elementsList = elementsEvaluated.toList()
+            val elementsList = elements.toList()
             val usagesList = usages.toList()
             KUsagesPresentation(project).showUsages(usagesList.asSequence(), searchQuery, Runnable {
                 for (it in elementsList) {
@@ -171,8 +171,8 @@ class KExceptionResult(val project: Project, t: Throwable) : KResult {
         messageLabel.background = Color.PINK
         prefix.background = Color.PINK
         classLabel.background = Color.PINK
-        val writer: StringWriter = StringWriter();
-        t.printStackTrace(PrintWriter(writer));
+        val writer: StringWriter = StringWriter()
+        t.printStackTrace(PrintWriter(writer))
         classLabel.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
                 val dialog: KAnalyzeStacktraceDialog = KAnalyzeStacktraceDialog(project, writer.toString())

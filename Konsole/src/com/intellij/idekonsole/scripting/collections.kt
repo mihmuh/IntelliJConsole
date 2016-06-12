@@ -1,5 +1,6 @@
 package com.intellij.idekonsole.scripting
 
+import com.intellij.idekonsole.KSettings
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
@@ -28,27 +29,59 @@ class IteratorSequence<out T>(private val iterator: Iterator<T>) : Sequence<T> b
 
 fun <T> Sequence<T>.constrainOnce(): IteratorSequence<T> = IteratorSequence(iterator())
 
-class PartiallyEvaluatedSequence<out T>(val evaluated: List<T>, val remaining: IteratorSequence<T>) : Sequence<T> {
-    override fun iterator(): Iterator<T> {
-        return evaluated.asSequence().plus(remaining).iterator()
-    }
+class PartiallyEvaluatedSequence<out T>(val evaluated: List<T>, val remaining: IteratorSequence<T>, val time: Long, val originalSequence: Sequence<T>)
+
+class CachedHeadSequence<out T>(val evaluated: List<T>, val hasRemaining: Boolean, val time: Long, val originalSequence: Sequence<T>) : Sequence<T> {
+    override fun iterator(): Iterator<T> = originalSequence.iterator()
 }
 
-fun <T> Sequence<T>.evaluate(time: Int): PartiallyEvaluatedSequence<T> {
+inline fun <reified R> CachedHeadSequence<*>.castToType(): CachedHeadSequence<R> {
+    return CachedHeadSequence<R>(evaluated.map { it as R }, hasRemaining, time, originalSequence.map { it as R })
+}
+
+fun <T, R> CachedHeadSequence<T>.map(f: (T) -> R): CachedHeadSequence<R> {
+    return CachedHeadSequence(evaluated.map { f(it) }, hasRemaining, time, originalSequence.map { f(it) })
+}
+
+fun <T : Any> CachedHeadSequence<T?>.filterNotNull(): CachedHeadSequence<T> {
+    return CachedHeadSequence(evaluated.filterNotNull(), hasRemaining, time, originalSequence.filterNotNull())
+}
+
+fun <T> Sequence<T>.cacheHead(maxTime: Long = KSettings.TIME_LIMIT, maxSize: Int = 1000, minSize: Int = 1): CachedHeadSequence<T> {
+    if (this is CachedHeadSequence) {
+        return this
+    }
+    val partiallyEvaluatedSequence = evaluateInternal(maxTime, maxSize, minSize)
+    if (this is LazyCancelableSequence<*>) {
+        cancel()
+    }
+    return CachedHeadSequence(partiallyEvaluatedSequence.evaluated, !partiallyEvaluatedSequence.remaining.isEmpty(), partiallyEvaluatedSequence.time, partiallyEvaluatedSequence.originalSequence)
+}
+
+class HeadTailSequence<out T>(val evaluated: List<T>, val remaining: IteratorSequence<T>, val time: Long)
+
+fun <T> Sequence<T>.evaluateHead(maxTime: Long, maxSize: Int = 1000, minSize: Int = 1): HeadTailSequence<T> {
+    val partiallyEvaluatedSequence = evaluateInternal(maxTime, maxSize, minSize)
+    return HeadTailSequence(partiallyEvaluatedSequence.evaluated, partiallyEvaluatedSequence.remaining, partiallyEvaluatedSequence.time)
+}
+
+private fun <T> Sequence<T>.evaluateInternal(maxTime: Long, maxSize: Int = 1000, minSize: Int = 1): PartiallyEvaluatedSequence<T> {
     val head = ArrayList<T>()
     val startTime = System.currentTimeMillis()
     val iterator = iterator()
-    while (iterator.hasNext() && System.currentTimeMillis() - startTime < time) {
+    val finished = !iterator.hasNext()
+    val timeExceeded = System.currentTimeMillis() - startTime > maxTime
+    while (!finished && !(timeExceeded && head.size >= minSize) && !(head.size >= maxSize)) {
         head.add(iterator.next())
     }
-    return PartiallyEvaluatedSequence(head, IteratorSequence(iterator))
+    return PartiallyEvaluatedSequence(head, IteratorSequence(iterator), System.currentTimeMillis() - startTime, this)
 }
 
-interface LazyCancellableSequenceSequence<out T> : Sequence<T> {
+interface LazyCancelableSequence<out T> : Sequence<T> {
     fun cancel()
 }
 
-private class ProcessorSequence<out T>(project: Project, handler: (Processor<T>) -> Unit) : LazyCancellableSequenceSequence<T> {
+private class ProcessorSequence<out T>(project: Project, handler: (Processor<T>) -> Unit) : LazyCancelableSequence<T> {
     private val buffer = ContainerUtil.createConcurrentList<T>()
     val lock = Object()
     var finished: Boolean = false
@@ -118,8 +151,8 @@ private class ProcessorSequence<out T>(project: Project, handler: (Processor<T>)
     }
 }
 
-fun <T> concurrentPipe(project: Project, handler: (Processor<T>) -> Unit): LazyCancellableSequenceSequence<T> {
-    return ProcessorSequence<T>(project, handler)
+fun <T> concurrentPipe(project: Project, handler: (Processor<T>) -> Unit): LazyCancelableSequence<T> {
+    return ProcessorSequence(project, handler)
 }
 
 //non concurrent version

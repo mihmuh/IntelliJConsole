@@ -40,13 +40,14 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
 }
 
 fun show(e: Sequence<Any?>) {
-    if (e.first() is PsiElement) {
-        return show(KUsagesResult(e.filterIsInstance<PsiElement>(), "", project(), output()))
+    val cachedHead = e.cacheHead(minSize = 1)
+    if (cachedHead.evaluated.all { it is PsiElement }) {
+        return show(KUsagesResult(cachedHead.castToType<PsiElement>(), "", project(), output()))
     }
-    if (e.first() is PsiReference) {
-        return show(KUsagesResult(e.map { (it as PsiReference).element!! }, "", project(), output()))
+    if (cachedHead.evaluated.all { it is PsiReference }) {
+        return show(KUsagesResult(cachedHead.castToType<PsiReference>().map { it.element }.filterNotNull(), "", project(), output()))
     }
-    if (e.first() is KResult) {
+    if (cachedHead.evaluated.all { it is KResult }) {
         return e.forEach { show(it as KResult) }
     }
     show(e.toString())

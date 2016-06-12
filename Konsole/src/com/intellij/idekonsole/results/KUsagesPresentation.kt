@@ -1,14 +1,13 @@
 package com.intellij.idekonsole.results
 
 import com.intellij.find.FindBundle
-import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.KSettings
+import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.context.runReadAndWait
 import com.intellij.idekonsole.context.runReadLater
 import com.intellij.idekonsole.scripting.IteratorSequence
-import com.intellij.idekonsole.scripting.evaluate
+import com.intellij.idekonsole.scripting.evaluateHead
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
@@ -37,7 +36,7 @@ class KUsagesPresentation {
         val usagesViewManager = UsageViewManager.getInstance(project)
 
         val presentation = createPresentation(searchQuery, false)
-        val usagesEvaluated = usages.evaluate(KSettings.TIME_LIMIT)
+        val usagesEvaluated = usages.evaluateHead(KSettings.TIME_LIMIT)
         val usagesView = usagesViewManager.showUsages(emptyArray(), usagesEvaluated.evaluated.toTypedArray<Usage>(), presentation)
 
         val context = Context.instance()
@@ -46,7 +45,7 @@ class KUsagesPresentation {
                 var remainingUsages: IteratorSequence<T> = usagesEvaluated.remaining
                 while (!indicator.isCanceled) {
                     runReadAndWait(context) {
-                        val evaluated = remainingUsages.asSequence().evaluate(KSettings.TIME_LIMIT)
+                        val evaluated = remainingUsages.asSequence().evaluateHead(KSettings.TIME_LIMIT)
                         evaluated.evaluated.forEach {
                             usagesView.appendUsage(it)
                         }
