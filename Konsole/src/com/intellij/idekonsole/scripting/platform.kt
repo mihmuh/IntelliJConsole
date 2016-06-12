@@ -100,10 +100,8 @@ fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project:
     val psiElements = ArrayUtil.mergeArrays(handler.primaryElements, handler.secondaryElements)
     val options = handler.getFindUsagesOptions(null)
     options.searchScope = scope
-    return psiElements
-            .map { psiElement -> concurrentPipe<UsageInfo?>(project) { handler.processElementUsages(psiElement, it, options) } }
-            .asSequence()
-            .flatMap { it }
+    return psiElements.asSequence()
+            .flatMap { psiElement -> concurrentPipe<UsageInfo?>(project) { handler.processElementUsages(psiElement, it, options) } }
             .map { it?.reference }
             .filterNotNull()
 }
