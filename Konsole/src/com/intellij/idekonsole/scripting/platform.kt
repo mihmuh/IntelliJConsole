@@ -4,6 +4,7 @@ import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.results.KHelpResult
+import com.intellij.idekonsole.scripting.collections.*
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -18,13 +19,13 @@ import com.intellij.util.ArrayUtil
 private fun defaultScope(): GlobalSearchScope = Context.instance().scope
 private fun defaultProject(): Project = Context.instance().project
 
-fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): Sequence<PsiReference> {
+fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project: Project = defaultProject()): SequenceLike<PsiReference> {
     val handler = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager.getFindUsagesHandler(node, false)!!
     val psiElements = ArrayUtil.mergeArrays(handler.primaryElements, handler.secondaryElements)
     val options = handler.getFindUsagesOptions(null)
     options.searchScope = scope
-    return psiElements.asSequence()
-            .flatMap { psiElement -> concurrentPipe<UsageInfo?>(project) { handler.processElementUsages(psiElement, it, options) } }
+    return psiElements.asSequence().asSequenceLike()
+            .flatMap { psiElement -> sequenceLikeProcessor<UsageInfo?> { processor -> handler.processElementUsages(psiElement, processor, options) }}
             .map { it?.reference }
             .filterNotNull()
 }

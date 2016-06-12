@@ -154,12 +154,3 @@ private class ProcessorSequence<out T>(project: Project, handler: (Processor<T>)
 fun <T> concurrentPipe(project: Project, handler: (Processor<T>) -> Unit): LazyCancelableSequence<T> {
     return ProcessorSequence(project, handler)
 }
-
-//non concurrent version
-fun <T> pipeByList(handler: (Processor<T>) -> Unit): Sequence<T> {
-    val buffer = ArrayList<T>()
-    handler(Processor {
-        buffer.add(it)
-    })
-    return buffer.asSequence()
-}
