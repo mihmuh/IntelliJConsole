@@ -27,7 +27,7 @@ fun usages(node: PsiElement, scope: GlobalSearchScope = defaultScope(), project:
     return psiElements.asSequence().asSequenceLike()
             .flatMap { psiElement -> sequenceLikeProcessor<UsageInfo?> { processor -> handler.processElementUsages(psiElement, processor, options) }}
             .map { it?.reference }
-            .filterNotNull()
+            .filterNotNull().wrapWithRead()
 }
 
 fun nodes(scope: GlobalSearchScope = defaultScope()): Sequence<PsiElement> =

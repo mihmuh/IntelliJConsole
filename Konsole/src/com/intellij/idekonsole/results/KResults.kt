@@ -3,7 +3,9 @@ package com.intellij.idekonsole.results
 import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.scripting.ConsoleOutput
+import com.intellij.idekonsole.scripting.HeadTailSequence
 import com.intellij.idekonsole.scripting.cacheHead
+import com.intellij.idekonsole.scripting.map
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ex.MessagesEx
@@ -102,7 +104,7 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
         if (elementsEvaluated.evaluated.size != 1) {
             elementsString += "s"
         }
-        if (!elementsEvaluated.hasRemaining) {
+        if (!elementsEvaluated.remaining.isEmpty()) {
             elementsString = "More than " + elementsString
         }
         if (refactoring != null) {

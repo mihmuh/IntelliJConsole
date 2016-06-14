@@ -29,7 +29,7 @@ class Context(val project: Project, var scope: GlobalSearchScope = GlobalSearchS
     }
 
     fun execute(f: () -> Unit) {
-        ApplicationManager.getApplication().assertIsDispatchThread()
+        ApplicationManager.getApplication().assertReadAccessAllowed()
         instance = this
         try {
             f.invoke()
@@ -53,6 +53,12 @@ fun runReadLater(context: Context, f: () -> Unit) {
         ApplicationManager.getApplication().runReadAction {
             context.execute(f)
         }
+    }
+}
+
+fun runRead(context: Context, f: () -> Unit) {
+    ApplicationManager.getApplication().runReadAction {
+        context.execute(f)
     }
 }
 
