@@ -47,7 +47,7 @@ fun <T> Sequence<T>.cacheHead(maxTime: Long = KSettings.TIME_LIMIT, maxSize: Int
     val iterator = iterator()
     val finished = !iterator.hasNext()
     val timeExceeded = System.currentTimeMillis() - startTime > maxTime
-    while (!finished && !(timeExceeded && head.size >= minSize) && !(head.size >= maxSize)) {
+    while (iterator.hasNext() && !finished && !(timeExceeded && head.size >= minSize) && !(head.size >= maxSize)) {
         head.add(iterator.next())
     }
     return HeadTailSequence(head, IteratorSequence(iterator), System.currentTimeMillis() - startTime)
