@@ -22,9 +22,10 @@ object KTemplates {
             import org.jetbrains.kotlin.j2k.*
 
             fun main_exec(){
-            show{
+            val function = {
                 ${COMMAND}
             }
+            show (function)
             }""".trimIndent()
 
 

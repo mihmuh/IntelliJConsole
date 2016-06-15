@@ -24,12 +24,6 @@ fun show(s: String) {
     show(KStdoutResult(s))
 }
 
-fun show(vararg e: PsiElement) {
-    show(e.toList())
-}
-
-private val EMPTY_SEQ = "Empty sequence"
-
 fun <T : PsiElement> show(refactoring: Refactoring<T>) {
     if (refactoring.elements.isNotEmpty()) {
         val result = KUsagesResult(refactoring.elements.asSequence(), "", project(), output(), refactoring.refactoring)
@@ -39,30 +33,50 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
     show(EMPTY_SEQ)
 }
 
-fun show(e: Sequence<Any?>) {
-    val cachedHead = e.cacheHead(minSize = 1)
-    if (cachedHead.evaluated.all { it is PsiElement }) {
-        return show(KUsagesResult(cachedHead.castToType<PsiElement>(), "", project(), output()))
-    }
-    if (cachedHead.evaluated.all { it is PsiReference }) {
-        return show(KUsagesResult(cachedHead.castToType<PsiReference>().map { it.element }.filterNotNull(), "", project(), output()))
-    }
-    if (cachedHead.evaluated.all { it is KResult }) {
-        return e.forEach { show(it as KResult) }
-    }
-    show(e.toString())
+@JvmName("showPsiElement") fun show(vararg e: PsiElement) {
+    show(e.toList())
 }
 
-fun show(e: List<Any?>) {
-    if (e.isNotEmpty()) {
-        return show(e.asSequence())
-    } else {
-        return show(EMPTY_SEQ)
-    }
+@JvmName("showSeqPsiElement") fun show(s: Sequence<PsiElement>) {
+    show(KUsagesResult(s, "", project(), output()))
 }
+
+@JvmName("showListPsiElement") fun show(l: List<PsiElement>) {
+    show(l.asSequence())
+}
+
+@JvmName("showSeqPsiElement") inline fun show(f: () -> Sequence<PsiElement>) {
+    show(f.invoke())
+}
+
+@JvmName("showListPsiElement") inline fun show(f: () -> List<PsiElement>) {
+    show(f.invoke())
+}
+
+@JvmName("showPsiReference") fun show(vararg e: PsiReference) {
+    show(e.toList())
+}
+
+@JvmName("showSeqPsiReference") fun show(s: Sequence<PsiReference>) {
+    return show(KUsagesResult(s.map { it.element }.filterNotNull(), "", project(), output()))
+}
+
+@JvmName("showListPsiReference") fun show(l: List<PsiReference>) {
+    show(l.asSequence())
+}
+
+@JvmName("showSeqPsiReference") inline fun show(f: () -> Sequence<PsiReference>) {
+    show(f.invoke())
+}
+
+@JvmName("showListPsiReference") inline fun show(f: () -> List<PsiReference>) {
+    show(f.invoke())
+}
+
+val EMPTY_SEQ = "Empty sequence"
 
 fun show(f: () -> Any?) {
-    show(f())
+    show(f.invoke())
 }
 
 fun show(o: Any?) {
@@ -70,23 +84,7 @@ fun show(o: Any?) {
         show("null")
     } else if (o is Unit) {
         //do nothing
-    } else if (o is (() -> Any?)) {
-        show(o)
-    } else if (o is KResult) {
-        show(o)
-    } else if (o is String) {
-        show(o)
-    } else if (o is List<*>) {
-        show(o)
-    } else if (o is PsiElement) {
-        show(o)
-    } else if (o is Sequence<*>) {
-        show(o)
     } else {
         show(o.toString())
     }
-}
-
-fun show(u: PsiReference) {
-    show(u.element!!)
 }
