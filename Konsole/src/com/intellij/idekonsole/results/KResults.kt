@@ -109,13 +109,8 @@ open class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, elements
     fun openUsagesView() {
         val usages = elements.map { if (it.isValid) UsageInfo2UsageAdapter(UsageInfo(it)) else UsageAdapter() }
         if (refactoring != null) {
-            val dialogAnswer = MessagesEx.showYesNoDialog("Operating with so many results can take more time.\nDo you want to continue?", "Too Many Results", null)
-            if (dialogAnswer != MessagesEx.YES) {
-                return
-            }
-            val elementsList = elements.toList()
-            val usagesList = usages.toList()
-            KUsagesPresentation(project).showUsages(usagesList.asSequence(), searchQuery, Runnable {
+            KUsagesPresentation(project).showUsages(usages, searchQuery, Runnable {
+                val elementsList = elements.toList()
                 for (it in elementsList) {
                     try {
                         refactoring.invoke(it)

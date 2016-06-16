@@ -3,17 +3,18 @@ package com.intellij.idekonsole.results
 import com.intellij.find.FindBundle
 import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.context.Context
-import com.intellij.idekonsole.context.aliases.context
 import com.intellij.idekonsole.context.runReadAndWait
 import com.intellij.idekonsole.context.runReadLater
 import com.intellij.idekonsole.scripting.collections.IteratorSequence
-import com.intellij.idekonsole.scripting.collections.cacheHead
 import com.intellij.idekonsole.scripting.collections.SequenceLike
+import com.intellij.idekonsole.scripting.collections.cacheHead
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.ex.MessagesEx
 import com.intellij.refactoring.RefactoringBundle
 import com.intellij.usages.*
 
@@ -70,28 +71,33 @@ class KUsagesPresentation {
     fun <T : Usage> showUsages(usages: SequenceLike<T>, searchQuery: String, refactoring: Runnable? = null) {
         myUsageViewSettings.loadState(usageViewSettings);
         val presentation = createPresentation(searchQuery, false)
-        ProgressManager.getInstance().run(object: Task.Backgroundable(project, "Searching") {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Searching") {
             @Volatile var usagesView: UsageView? = null
             override fun run(progressIndicator: ProgressIndicator) {
                 var initiated = false
+                var usagesCount = 0
                 usages.forEach {
-                    if (usagesView == null) {
-                        if (!initiated) {
-                            initiated = true
-                            ApplicationManager.getApplication().invokeLater {
-                                ApplicationManager.getApplication().runReadAction {
-                                    usagesView = UsageViewManager.getInstance(project).showUsages(emptyArray(), arrayOf<Usage>(it), presentation)
-                                }
-                            }
-                        } else {
-                            ApplicationManager.getApplication().invokeLater {
-                                ApplicationManager.getApplication().runReadAction {
-                                    usagesView!!.appendUsage(it)
-                                }
+                    if (!initiated) {
+                        initiated = true
+                        ApplicationManager.getApplication().invokeLater {
+                            ApplicationManager.getApplication().runReadAction {
+                                usagesView = UsageViewManager.getInstance(project).showUsages(emptyArray(), arrayOf<Usage>(it), presentation)
+                                usagesCount++;
                             }
                         }
                     } else {
-                         usagesView!!.appendUsage(it)
+                        ApplicationManager.getApplication().invokeLater {
+                            ApplicationManager.getApplication().runReadAction {
+                                if (usagesCount == 1000) {
+                                    val dialogAnswer = MessagesEx.showYesNoDialog("Operating with so many results can take more time.\nDo you want to continue?", "Too Many Results", null)
+                                    if (dialogAnswer != MessagesEx.YES) {
+                                        progressIndicator.cancel()
+                                    }
+                                }
+                                usagesView!!.appendUsage(it)
+                                usagesCount++;
+                            }
+                        }
                     }
                 }
                 if (usagesView == null) {
