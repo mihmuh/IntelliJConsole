@@ -3,7 +3,11 @@ package com.intellij.idekonsole.scripting
 import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.results.KResult
 import com.intellij.idekonsole.results.KStdoutResult
-import com.intellij.idekonsole.results.KUsagesResult
+import com.intellij.idekonsole.results.usagesResult
+import com.intellij.idekonsole.scripting.collections.SequenceLike
+import com.intellij.idekonsole.scripting.collections.filterNotNull
+import com.intellij.idekonsole.scripting.collections.isNotEmpty
+import com.intellij.idekonsole.scripting.collections.map
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
@@ -26,7 +30,7 @@ fun show(s: String) {
 
 fun <T : PsiElement> show(refactoring: Refactoring<T>) {
     if (refactoring.elements.isNotEmpty()) {
-        val result = KUsagesResult(refactoring.elements.asSequence(), "", project(), output(), refactoring.refactoring)
+        val result = usagesResult(refactoring, "", project(), output())
         result.openUsagesView()
         return show(result)
     }
@@ -38,7 +42,11 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
 }
 
 @JvmName("showSeqPsiElement") fun show(s: Sequence<PsiElement>) {
-    show(KUsagesResult(s, "", project(), output()))
+    show(usagesResult(s, "", project(), output()))
+}
+
+@JvmName("showCocoSeqPsiElement") fun show(s: SequenceLike<PsiElement>) {
+    show(usagesResult(s, "", project(), output()))
 }
 
 @JvmName("showListPsiElement") fun show(l: List<PsiElement>) {
@@ -46,6 +54,10 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
 }
 
 @JvmName("showSeqPsiElement") inline fun show(f: () -> Sequence<PsiElement>) {
+    show(f.invoke())
+}
+
+@JvmName("showCocoSeqPsiElement") fun show(f: () -> SequenceLike<PsiElement>) {
     show(f.invoke())
 }
 
@@ -58,7 +70,11 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
 }
 
 @JvmName("showSeqPsiReference") fun show(s: Sequence<PsiReference>) {
-    return show(KUsagesResult(s.map { it.element }.filterNotNull(), "", project(), output()))
+    return show(usagesResult(s.map { it.element }.filterNotNull(), "", project(), output()))
+}
+
+@JvmName("showCocoSeqPsiReference") fun show(s: SequenceLike<PsiReference>) {
+    return show(usagesResult(s.map { it.element }.filterNotNull(), "", project(), output()))
 }
 
 @JvmName("showListPsiReference") fun show(l: List<PsiReference>) {
@@ -66,6 +82,10 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
 }
 
 @JvmName("showSeqPsiReference") inline fun show(f: () -> Sequence<PsiReference>) {
+    show(f.invoke())
+}
+
+@JvmName("showCocoSeqPsiReference") inline fun show(f: () -> SequenceLike<PsiReference>) {
     show(f.invoke())
 }
 

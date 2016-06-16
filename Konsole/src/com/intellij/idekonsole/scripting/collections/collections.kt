@@ -1,4 +1,4 @@
-package com.intellij.idekonsole.scripting
+package com.intellij.idekonsole.scripting.collections
 
 import com.intellij.idekonsole.KSettings
 import java.util.*

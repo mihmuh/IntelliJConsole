@@ -1,7 +1,7 @@
 package com.intellij.idekonsole.scripting.java
 
 import com.intellij.idekonsole.context.Context
-import com.intellij.idekonsole.scripting.deepSearch
+import com.intellij.idekonsole.scripting.collections.deepSearch
 import com.intellij.idekonsole.scripting.modules
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.impl.scopes.ModulesScope

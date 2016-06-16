@@ -3,9 +3,8 @@ package com.intellij.idekonsole.results
 import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.scripting.ConsoleOutput
-import com.intellij.idekonsole.scripting.HeadTailSequence
-import com.intellij.idekonsole.scripting.cacheHead
-import com.intellij.idekonsole.scripting.map
+import com.intellij.idekonsole.scripting.Refactoring
+import com.intellij.idekonsole.scripting.collections.*
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ex.MessagesEx
@@ -89,31 +88,14 @@ class KErrorResult(error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-abstract class KPostponingResult: KResult {
-
-}
-
-class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: String, val project: Project, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KPostponingResult() {
+open class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, elementsString: String, val searchQuery: String, val project: Project, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KResult {
     val panel: JComponent
     val label: JBLabel
     val mouseAdapter: MouseListener
-    val elementsEvaluated = elements.cacheHead(KSettings.TIME_LIMIT)
 
     init {
-        var elementsString = "" + elementsEvaluated.evaluated.size + " element"
-        if (elementsEvaluated.evaluated.size != 1) {
-            elementsString += "s"
-        }
-        if (!elementsEvaluated.remaining.isEmpty()) {
-            elementsString = "More than " + elementsString
-        }
-        if (refactoring != null) {
-            elementsString = "Refactor " + elementsString
-        }
         label = JBLabel("<html><a>$elementsString</a></html>")
         label.foreground = Color.BLUE
-
-        //todo one node should be shown as a ref
 
         val wrappedOpenUsagesView = Context.wrapCallback({ openUsagesView() })
         mouseAdapter = object : MouseAdapter() {
@@ -142,7 +124,7 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
                         label.text = label.text.replace("" + elementsList.size + " element", "" + failedIndex + " element") + "successfully"
                         val exception = KExceptionResult(project, e)
                         output?.addResultAfter(exception, this)
-                        val remaining = KUsagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, project, output, refactoring)
+                        val remaining = usagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, project, output, refactoring)
                         remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
                         output?.addResultAfter(remaining, exception)
                         break
@@ -155,11 +137,34 @@ class KUsagesResult<T : PsiElement>(val elements: Sequence<T>, val searchQuery: 
             })
         } else {
             KUsagesPresentation(project).showUsages(usages, searchQuery)
-
         }
     }
 
     override fun getPresentation(): JComponent = panel
+}
+
+fun <T: PsiElement> usagesResult(elements: SequenceLike<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {
+    return KUsagesResult(elements, "Search query", searchQuery, project, output, refactoring)
+}
+
+fun <T: PsiElement> usagesResult(refactoring: Refactoring<T>, searchQuery: String, project: Project, output: ConsoleOutput?): KUsagesResult<T> {
+    return usagesResult(refactoring.elements.asSequence(), searchQuery, project, output, refactoring.refactoring)
+}
+
+fun <T: PsiElement> usagesResult(elements: Sequence<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {
+    val elementsEvaluated = elements.cacheHead(KSettings.TIME_LIMIT)
+    var elementsString = "" + elementsEvaluated.evaluated.size + " element"
+    if (elementsEvaluated.evaluated.size != 1) {
+        elementsString += "s"
+    }
+    if (!elementsEvaluated.remaining.isEmpty()) {
+        elementsString = "More than " + elementsString
+    }
+    if (refactoring != null) {
+        elementsString = "Refactor " + elementsString
+    }
+    //todo one node should be shown as a ref
+    return KUsagesResult(elements.asSequenceLike(), elementsString, searchQuery, project, output, refactoring)
 }
 
 class KExceptionResult(val project: Project, t: Throwable) : KResult {

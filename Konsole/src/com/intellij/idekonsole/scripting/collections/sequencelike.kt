@@ -35,10 +35,6 @@ inline fun <reified R> SequenceLike<*>.filterIsInstance(): SequenceLike<R> = obj
     }
 }
 
-fun read(f: () -> Unit) {
-    ApplicationManager.getApplication().runReadAction(f)
-}
-
 fun <T> SequenceLike<T>.wrapWithRead(): SequenceLike<T> {
     var context = Context.instance()
     return object : SequenceLike<T> {
@@ -65,8 +61,11 @@ fun <T, R> SequenceLike<T>.flatMap(transform: (T) -> SequenceLike<R>): SequenceL
 }
 
 fun <T> Sequence<T>.asSequenceLike(): SequenceLike<T> = object : SequenceLike<T> {
+    var context = Context.instance()
     override fun forEach(action: (T) -> Unit) {
-        this@asSequenceLike.forEach { action(it) }
+        runRead(context) {
+            this@asSequenceLike.forEach { action(it) }
+        }
     }
 }
 

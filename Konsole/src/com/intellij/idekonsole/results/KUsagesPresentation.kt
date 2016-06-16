@@ -3,10 +3,11 @@ package com.intellij.idekonsole.results
 import com.intellij.find.FindBundle
 import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.context.Context
+import com.intellij.idekonsole.context.aliases.context
 import com.intellij.idekonsole.context.runReadAndWait
 import com.intellij.idekonsole.context.runReadLater
-import com.intellij.idekonsole.scripting.IteratorSequence
-import com.intellij.idekonsole.scripting.cacheHead
+import com.intellij.idekonsole.scripting.collections.IteratorSequence
+import com.intellij.idekonsole.scripting.collections.cacheHead
 import com.intellij.idekonsole.scripting.collections.SequenceLike
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressIndicator
@@ -70,15 +71,15 @@ class KUsagesPresentation {
         myUsageViewSettings.loadState(usageViewSettings);
         val presentation = createPresentation(searchQuery, false)
         ProgressManager.getInstance().run(object: Task.Backgroundable(project, "Searching") {
+            @Volatile var usagesView: UsageView? = null
             override fun run(progressIndicator: ProgressIndicator) {
-                var usagesView: UsageView? = null
                 var initiated = false
                 usages.forEach {
                     if (usagesView == null) {
                         if (!initiated) {
                             initiated = true
                             ApplicationManager.getApplication().invokeLater {
-                                ApplicationManager.getApplication().runWriteAction {
+                                ApplicationManager.getApplication().runReadAction {
                                     usagesView = UsageViewManager.getInstance(project).showUsages(emptyArray(), arrayOf<Usage>(it), presentation)
                                 }
                             }
@@ -90,7 +91,6 @@ class KUsagesPresentation {
                             }
                         }
                     } else {
-                         usagesView
                          usagesView!!.appendUsage(it)
                     }
                 }
