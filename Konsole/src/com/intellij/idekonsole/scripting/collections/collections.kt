@@ -11,12 +11,9 @@ fun <T> wideSearch(seed: Sequence<T>, f: (T) -> Sequence<T>): Sequence<T> {
     return seed + wideSearch(seed.flatMap(f), f)
 }
 
-fun <T> Sequence<T>.isNotEmpty(): Boolean = iterator().hasNext()
-
-fun <T> Sequence<T>.isEmpty(): Boolean = !isNotEmpty()
-
 class IteratorSequence<out T>(private val iterator: Iterator<T>) : Sequence<T> by iterator.asSequence() {
     fun isEmpty(): Boolean = !iterator.hasNext()
+    fun isNotEmpty(): Boolean = iterator.hasNext()
 }
 
 fun <T, R> IteratorSequence<T>.map(transform: (T) -> R): IteratorSequence<R> =

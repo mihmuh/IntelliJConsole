@@ -148,7 +148,7 @@ fun <T: PsiElement> usagesResult(elements: SequenceLike<T>, searchQuery: String,
 }
 
 fun <T: PsiElement> usagesResult(refactoring: Refactoring<T>, searchQuery: String, project: Project, output: ConsoleOutput?): KUsagesResult<T> {
-    return usagesResult(refactoring.elements.asSequence(), searchQuery, project, output, refactoring.refactoring)
+    return usagesResult(refactoring.elements, searchQuery, project, output, refactoring.refactoring)
 }
 
 fun <T: PsiElement> usagesResult(elements: Sequence<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {

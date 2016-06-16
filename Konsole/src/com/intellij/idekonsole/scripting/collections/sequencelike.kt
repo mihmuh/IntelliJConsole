@@ -60,14 +60,16 @@ fun <T, R> SequenceLike<T>.flatMap(transform: (T) -> SequenceLike<R>): SequenceL
     }
 }
 
-fun <T> Sequence<T>.asSequenceLike(): SequenceLike<T> = object : SequenceLike<T> {
+class SequenceSequenceLike<out T>(val sequence: Sequence<T>): SequenceLike<T> {
     var context = Context.instance()
     override fun forEach(action: (T) -> Unit) {
         runRead(context) {
-            this@asSequenceLike.forEach { action(it) }
+            sequence.forEach { action(it) }
         }
     }
 }
+
+fun <T> Sequence<T>.asSequenceLike(): SequenceLike<T> = SequenceSequenceLike(this)
 
 fun <T> SequenceLike<T>.toList(): List<T> {
     val result = ArrayList<T>()

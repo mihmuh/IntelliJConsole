@@ -52,22 +52,36 @@ fun PsiElement.descendants(): Sequence<PsiElement> {
     return sequenceOf(this).plus(this.children.asSequence().flatMap { it.descendants() })
 }
 
-class Refactoring<T : PsiElement>(elements: Sequence<T>, refactoring: (T) -> Unit) {
-    val elements: Sequence<T> = elements
-    val refactoring: (T) -> Unit = refactoring
+class Refactoring<T : PsiElement>(val elements: SequenceLike<T>, val refactoring: (T) -> Unit) {
+    private var sequence: HeadTailSequence<T>? = null
+    fun isEmpty(): Boolean? {
+        if (sequence != null) {
+            return sequence!!.evaluated.isEmpty()
+        }
+        return null
+    }
+    constructor(elements: Sequence<T>, refactoring: (T) -> Unit): this(elements.asSequenceLike(), refactoring) {
+        sequence = elements.cacheHead(maxSize = 1, minSize = 1)
+    }
 }
 
 fun <T : PsiElement> List<T>.refactor(refactoring: (T) -> Unit) =
         asSequence().refactor(refactoring)
 
 fun <T : PsiElement> Sequence<T>.refactor(refactoring: (T) -> Unit) =
+        asSequenceLike().refactor(refactoring)
+
+fun <T : PsiElement> SequenceLike<T>.refactor(refactoring: (T) -> Unit) =
         show(Refactoring(this, refactoring))
 
 @JvmName("refactorReferences") fun List<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
         asSequence().refactor(refactoring)
 
 @JvmName("refactorReferences") fun Sequence<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
-        map { it.resolve() }.filterNotNull().asSequence().refactor(refactoring)
+        asSequenceLike().refactor(refactoring)
+
+@JvmName("refactorReferences") fun SequenceLike<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
+        map { it.resolve() }.filterNotNull().refactor(refactoring)
 
 //------------ project structure navigation
 

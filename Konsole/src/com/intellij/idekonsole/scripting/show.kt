@@ -6,7 +6,6 @@ import com.intellij.idekonsole.results.KStdoutResult
 import com.intellij.idekonsole.results.usagesResult
 import com.intellij.idekonsole.scripting.collections.SequenceLike
 import com.intellij.idekonsole.scripting.collections.filterNotNull
-import com.intellij.idekonsole.scripting.collections.isNotEmpty
 import com.intellij.idekonsole.scripting.collections.map
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
@@ -29,12 +28,13 @@ fun show(s: String) {
 }
 
 fun <T : PsiElement> show(refactoring: Refactoring<T>) {
-    if (refactoring.elements.isNotEmpty()) {
+    if (refactoring.isEmpty() == true) {
+        return show(EMPTY_SEQ)
+    } else {
         val result = usagesResult(refactoring, "", project(), output())
         result.openUsagesView()
         return show(result)
     }
-    show(EMPTY_SEQ)
 }
 
 @JvmName("showPsiElement") fun show(vararg e: PsiElement) {
