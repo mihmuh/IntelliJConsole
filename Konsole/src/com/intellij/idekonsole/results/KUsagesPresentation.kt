@@ -9,10 +9,11 @@ import com.intellij.idekonsole.scripting.collections.IteratorSequence
 import com.intellij.idekonsole.scripting.collections.SequenceLike
 import com.intellij.idekonsole.scripting.collections.cacheHead
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.util.ProgressWrapper
+import com.intellij.openapi.progress.util.TooManyUsagesStatus
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ex.MessagesEx
 import com.intellij.refactoring.RefactoringBundle
@@ -71,42 +72,33 @@ class KUsagesPresentation {
     fun <T : Usage> showUsages(usages: SequenceLike<T>, searchQuery: String, refactoring: Runnable? = null) {
         myUsageViewSettings.loadState(usageViewSettings);
         val presentation = createPresentation(searchQuery, false)
+        val usagesView = UsageViewManager.getInstance(project).showUsages(emptyArray(), emptyArray(), presentation)
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Searching") {
-            @Volatile var usagesView: UsageView? = null
             override fun run(progressIndicator: ProgressIndicator) {
-                var initiated = false
+                TooManyUsagesStatus.createFor(progressIndicator);
                 var usagesCount = 0
                 usages.forEach {
-                    if (!initiated) {
-                        initiated = true
+                    usagesView.appendUsage(it)
+                    if (usagesCount == 1000) {
+                        //todo: why
+                        val indicator1 = ProgressWrapper.unwrap(ProgressManager.getInstance().progressIndicator);
+                        //hoping that wait is done in the depth of find usages code
+                        TooManyUsagesStatus.getFrom(indicator1).switchTooManyUsagesStatus()
                         ApplicationManager.getApplication().invokeLater {
-                            ApplicationManager.getApplication().runReadAction {
-                                usagesView = UsageViewManager.getInstance(project).showUsages(emptyArray(), arrayOf<Usage>(it), presentation)
-                                usagesCount++;
-                            }
-                        }
-                    } else {
-                        ApplicationManager.getApplication().invokeLater {
-                            ApplicationManager.getApplication().runReadAction {
-                                if (usagesCount == 1000) {
-                                    val dialogAnswer = MessagesEx.showYesNoDialog("Operating with so many results can take more time.\nDo you want to continue?", "Too Many Results", null)
-                                    if (dialogAnswer != MessagesEx.YES) {
-                                        progressIndicator.cancel()
-                                    }
-                                }
-                                usagesView!!.appendUsage(it)
-                                usagesCount++;
+                            val dialogAnswer = MessagesEx.showYesNoDialog("Operating with so many results can take more time.\nDo you want to continue?", "Too Many Results", null)
+                            if (dialogAnswer != MessagesEx.YES) {
+                                progressIndicator.cancel()
                             }
                         }
                     }
+                    usagesCount++;
                 }
-                if (usagesView == null) {
-                    //todo: no usages found
-                } else if (!progressIndicator.isCanceled && refactoring != null) {
+                //todo: if no usages found
+                if (!progressIndicator.isCanceled && refactoring != null) {
                     val canNotMakeString = RefactoringBundle.message("usageView.need.reRun")
                     //todo deal with checkonly status and write action
                     val wrappedRefactoring = Context.wrapCallback { ApplicationManager.getApplication().runWriteAction(refactoring) }
-                    usagesView!!.addPerformOperationAction(wrappedRefactoring, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
+                    usagesView.addPerformOperationAction(wrappedRefactoring, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
                 }
             }
         })
