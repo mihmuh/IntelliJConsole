@@ -2,7 +2,6 @@ package com.intellij.idekonsole.scripting.collections
 
 import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.context.runRead
-import com.intellij.openapi.application.ApplicationManager
 import java.util.*
 
 interface SequenceLike<out T> {
@@ -33,6 +32,11 @@ inline fun <reified R> SequenceLike<*>.filterIsInstance(): SequenceLike<R> = obj
     override fun forEach(action: (R) -> Unit) {
         this@filterIsInstance.forEach { if (it is R) action(it) }
     }
+}
+
+fun <R> SequenceLike<*>.filterIsInstance(klass: java.lang.Class<R>): SequenceLike<R> {
+    @Suppress("UNCHECKED_CAST")
+    return filter { klass.isInstance(it) } as SequenceLike<R>
 }
 
 fun <T> SequenceLike<T>.wrapWithRead(): SequenceLike<T> {

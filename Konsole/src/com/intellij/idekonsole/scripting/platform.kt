@@ -92,16 +92,28 @@ val help = { KHelpResult("I'm the help of your dream") }
 
 //------------ util
 
-fun <T : PsiNamedElement> List<T>.withName(name: String): List<T> =
+fun <T : PsiNamedElement> Sequence<T>.withName(name: String): Sequence<T> =
         filter { it.name == name }
 
-fun <T : PsiNamedElement> List<T>.oneWithName(name: String): T? =
+fun <T : PsiNamedElement> Iterable<T>.withName(name: String): List<T> =
+        filter { it.name == name }
+
+fun <T : PsiNamedElement> SequenceLike<T>.withName(name: String): SequenceLike<T> =
+        filter { it.name == name }
+
+fun <T : PsiNamedElement> Iterable<T>.oneWithName(name: String): T? =
         withName(name).firstOrNull()
 
-fun <T : PsiElement> List<PsiElement>.withKind(k: PsiClassRef<T>): List<T> =
+fun <T : PsiNamedElement> Sequence<T>.oneWithName(name: String): T? =
+        withName(name).firstOrNull()
+
+fun <T : PsiElement> Iterable<PsiElement>.withKind(k: PsiClassRef<T>): List<T> =
         filterIsInstance(k.myRef)
 
 fun <T : PsiElement> Sequence<PsiElement>.withKind(k: PsiClassRef<T>): Sequence<T> =
+        filterIsInstance(k.myRef)
+
+fun <T : PsiElement> SequenceLike<PsiElement>.withKind(k: PsiClassRef<T>): SequenceLike<T> =
         filterIsInstance(k.myRef)
 
 fun <T> T.hasValue(e: T): Boolean {
