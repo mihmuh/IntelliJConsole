@@ -36,42 +36,6 @@ class KUsagesPresentation {
         this.project = project
     }
 
-    fun <T : Usage> showUsages(usages: Sequence<T>, searchQuery: String, refactoring: Runnable? = null) {
-        myUsageViewSettings.loadState(usageViewSettings);
-        val usagesViewManager = UsageViewManager.getInstance(project)
-
-        val presentation = createPresentation(searchQuery, false)
-        val usagesEvaluated = usages.cacheHead(KSettings.TIME_LIMIT)
-        val usagesView = usagesViewManager.showUsages(emptyArray(), usagesEvaluated.evaluated.toTypedArray<Usage>(), presentation)
-
-        val context = Context.instance()
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Searching") {
-            override fun run(indicator: ProgressIndicator) {
-                var remainingUsages: IteratorSequence<T> = usagesEvaluated.remaining
-                while (!indicator.isCanceled) {
-                    runReadAndWait(context) {
-                        val evaluated = remainingUsages.asSequence().cacheHead(KSettings.TIME_LIMIT)
-                        evaluated.evaluated.forEach {
-                            usagesView.appendUsage(it)
-                        }
-                        remainingUsages = evaluated.remaining
-                    }
-                    if (remainingUsages.isEmpty()) {
-                        break;
-                    }
-                }
-                runReadLater(context) {
-                    if (remainingUsages.isEmpty() && refactoring != null) {
-                        val canNotMakeString = RefactoringBundle.message("usageView.need.reRun")
-                        //todo deal with checkonly status and write action
-                        val wrappedRefactoring = Context.wrapCallback { ApplicationManager.getApplication().runWriteAction(refactoring) }
-                        usagesView.addPerformOperationAction(wrappedRefactoring, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
-                    }
-                }
-            }
-        })
-    }
-
 
     fun <T : Usage> showUsages(usages: SequenceLike<T>, searchQuery: String, refactoring: Runnable? = null) {
         myUsageViewSettings.loadState(usageViewSettings);
