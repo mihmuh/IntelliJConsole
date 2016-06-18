@@ -8,16 +8,20 @@ import com.intellij.idekonsole.context.runReadLater
 import com.intellij.idekonsole.scripting.collections.IteratorSequence
 import com.intellij.idekonsole.scripting.collections.SequenceLike
 import com.intellij.idekonsole.scripting.collections.cacheHead
+import com.intellij.idekonsole.usages.UsagesViewHelper
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.progress.util.ProgressWrapper
 import com.intellij.openapi.progress.util.TooManyUsagesStatus
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ex.MessagesEx
+import com.intellij.openapi.wm.ToolWindowId
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.refactoring.RefactoringBundle
 import com.intellij.usages.*
+import com.intellij.usages.impl.UsageViewImpl
+import javax.swing.SwingUtilities
 
 /**
  * @author simon
@@ -72,33 +76,44 @@ class KUsagesPresentation {
     fun <T : Usage> showUsages(usages: SequenceLike<T>, searchQuery: String, refactoring: Runnable? = null) {
         myUsageViewSettings.loadState(usageViewSettings);
         val presentation = createPresentation(searchQuery, false)
-        val usagesView = UsageViewManager.getInstance(project).showUsages(emptyArray(), emptyArray(), presentation)
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Searching") {
             override fun run(progressIndicator: ProgressIndicator) {
-                TooManyUsagesStatus.createFor(progressIndicator);
+                val tooManyUsagesStatus = TooManyUsagesStatus.createFor(progressIndicator)
                 var usagesCount = 0
+                var usagesView: UsageView? = null
                 usages.forEach {
-                    usagesView.appendUsage(it)
-                    if (usagesCount == 1000) {
-                        //todo: why
-                        val indicator1 = ProgressWrapper.unwrap(ProgressManager.getInstance().progressIndicator);
-                        //hoping that wait is done in the depth of find usages code
-                        TooManyUsagesStatus.getFrom(indicator1).switchTooManyUsagesStatus()
+                    tooManyUsagesStatus.pauseProcessingIfTooManyUsages()
+                    if (usagesCount == 0) {
+                        usagesView = UsageViewManager.getInstance(project).createUsageView(emptyArray(), arrayOf<Usage>(it), presentation, null)
+                        SwingUtilities.invokeLater {
+                            UsagesViewHelper.addContent(project, usagesView as UsageViewImpl, presentation)
+                            com.intellij.usageView.UsageViewManager.getInstance(project)
+                            val toolWindow = ToolWindowManager.getInstance(this.myProject).getToolWindow(ToolWindowId.FIND)
+                            toolWindow.show(null)
+                            toolWindow.activate(null)
+
+                        }
+                    } else if (usagesCount == KSettings.MAX_USAGES) {
                         ApplicationManager.getApplication().invokeLater {
-                            val dialogAnswer = MessagesEx.showYesNoDialog("Operating with so many results can take more time.\nDo you want to continue?", "Too Many Results", null)
+                            TooManyUsagesStatus.getFrom(progressIndicator).switchTooManyUsagesStatus()
+                            val dialogAnswer = MessagesEx.showYesNoDialog("More than ${KSettings.MAX_USAGES} usages found.\nDo you want to continue?", "Too Many Results", null)
                             if (dialogAnswer != MessagesEx.YES) {
                                 progressIndicator.cancel()
                             }
+                            tooManyUsagesStatus.userResponded()
                         }
                     }
+                    usagesView!!.appendUsage(it)
                     usagesCount++;
                 }
-                //todo: if no usages found
-                if (!progressIndicator.isCanceled && refactoring != null) {
+
+                if (usagesView == null) {
+                    //todo: if no usages found
+                } else if (!progressIndicator.isCanceled && refactoring != null) {
                     val canNotMakeString = RefactoringBundle.message("usageView.need.reRun")
                     //todo deal with checkonly status and write action
                     val wrappedRefactoring = Context.wrapCallback { ApplicationManager.getApplication().runWriteAction(refactoring) }
-                    usagesView.addPerformOperationAction(wrappedRefactoring, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
+                    usagesView!!.addPerformOperationAction(wrappedRefactoring, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
                 }
             }
         })

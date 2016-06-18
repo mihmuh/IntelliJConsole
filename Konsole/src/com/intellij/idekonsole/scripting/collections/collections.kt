@@ -38,7 +38,7 @@ fun <T, R> HeadTailSequence<T>.map(f: (T) -> R): HeadTailSequence<R> {
     return HeadTailSequence(evaluated.map { f(it) }, remaining.map { f(it) }, time)
 }
 
-fun <T> Sequence<T>.cacheHead(maxTime: Long = KSettings.TIME_LIMIT, maxSize: Int = 1000, minSize: Int = 1): HeadTailSequence<T> {
+fun <T> Sequence<T>.cacheHead(maxTime: Long = KSettings.TIME_LIMIT, maxSize: Int = KSettings.MAX_USAGES, minSize: Int = 1): HeadTailSequence<T> {
     val head = ArrayList<T>()
     val startTime = System.currentTimeMillis()
     val iterator = iterator()
