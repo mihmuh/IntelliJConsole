@@ -5,6 +5,8 @@ import com.intellij.find.impl.FindManagerImpl
 import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.results.KHelpResult
 import com.intellij.idekonsole.scripting.collections.*
+import com.intellij.idekonsole.scripting.collections.impl.sequenceLikeProcessor
+import com.intellij.idekonsole.scripting.collections.impl.wrapWithRead
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
