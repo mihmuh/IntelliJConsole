@@ -2,23 +2,23 @@ package com.intellij.idekonsole.context
 
 import com.intellij.idekonsole.scripting.ConsoleOutput
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import java.util.*
 
 // FIXME: we can load separate instances of this class in different MegaLoader's -
 // and initialize its fields via reflection before executing the payload
-// but for now - just share same instances, expecting that no one will launch multiple commands simultaneously
+// but for now - assuming that everywhere context is required it was set explicitly
 
 class Context(val project: Project, var scope: GlobalSearchScope = GlobalSearchScope.projectScope(project), val output: ConsoleOutput) {
 
     companion object {
-        private var instance: Context? = null
+        private var instance: ThreadLocal<LinkedList<Context?>> = ThreadLocal.withInitial { LinkedList<Context?>() }
         fun instance(): Context {
-            if (instance == null) {
+            if (instance.get().isEmpty()) {
                 throw UnsupportedOperationException("No console context available. It may be caused by using invokeLater() in console")
             }
-            return instance!!
+            return instance.get().first!!
         }
         fun wrapCallback(f: () -> Unit): () -> Unit {
             val context = instance()
@@ -29,43 +29,18 @@ class Context(val project: Project, var scope: GlobalSearchScope = GlobalSearchS
     }
 
     fun execute(f: () -> Unit) {
-        ApplicationManager.getApplication().assertReadAccessAllowed()
-        instance = this
+        instance.get().addFirst(this)
         try {
             f.invoke()
         } finally {
-            instance = null
+            instance.get().removeFirst()
         }
     }
 
-}
-
-fun runReadAndWait(context: Context, f: () -> Unit) {
-    ApplicationManager.getApplication().invokeAndWait({
-        ApplicationManager.getApplication().runReadAction {
-            context.execute(f)
-        }
-    }, ModalityState.NON_MODAL)
-}
-
-fun runReadLater(context: Context, f: () -> Unit) {
-    ApplicationManager.getApplication().invokeLater {
-        ApplicationManager.getApplication().runReadAction {
-            context.execute(f)
-        }
-    }
 }
 
 fun runRead(context: Context, f: () -> Unit) {
     ApplicationManager.getApplication().runReadAction {
         context.execute(f)
-    }
-}
-
-fun runWriteLater(context: Context, f: () -> Unit) {
-    ApplicationManager.getApplication().invokeLater {
-        ApplicationManager.getApplication().runReadAction {
-            context.execute(f)
-        }
     }
 }

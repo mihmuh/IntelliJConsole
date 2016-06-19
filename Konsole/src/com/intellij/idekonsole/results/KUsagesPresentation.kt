@@ -3,11 +3,7 @@ package com.intellij.idekonsole.results
 import com.intellij.find.FindBundle
 import com.intellij.idekonsole.KSettings
 import com.intellij.idekonsole.context.Context
-import com.intellij.idekonsole.context.runReadAndWait
-import com.intellij.idekonsole.context.runReadLater
-import com.intellij.idekonsole.scripting.collections.IteratorSequence
 import com.intellij.idekonsole.scripting.collections.SequenceLike
-import com.intellij.idekonsole.scripting.collections.cacheHead
 import com.intellij.idekonsole.usages.UsagesViewHelper
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressIndicator
@@ -21,7 +17,6 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.refactoring.RefactoringBundle
 import com.intellij.usages.*
 import com.intellij.usages.impl.UsageViewImpl
-import javax.swing.SwingUtilities
 
 /**
  * @author simon
@@ -49,7 +44,7 @@ class KUsagesPresentation {
                     tooManyUsagesStatus.pauseProcessingIfTooManyUsages()
                     if (usagesCount == 0) {
                         usagesView = UsageViewManager.getInstance(project).createUsageView(emptyArray(), arrayOf<Usage>(it), presentation, null)
-                        SwingUtilities.invokeLater {
+                        ApplicationManager.getApplication().invokeLater {
                             UsagesViewHelper.addContent(project, usagesView as UsageViewImpl, presentation)
                             com.intellij.usageView.UsageViewManager.getInstance(project)
                             val toolWindow = ToolWindowManager.getInstance(this.myProject).getToolWindow(ToolWindowId.FIND)
