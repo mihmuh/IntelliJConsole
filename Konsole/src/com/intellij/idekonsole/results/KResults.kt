@@ -5,6 +5,7 @@ import com.intellij.idekonsole.context.Context
 import com.intellij.idekonsole.scripting.ConsoleOutput
 import com.intellij.idekonsole.scripting.Refactoring
 import com.intellij.idekonsole.scripting.collections.*
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ex.MessagesEx
@@ -13,6 +14,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.usageView.UsageInfo
+import com.intellij.usages.Usage
 import com.intellij.usages.UsageInfo2UsageAdapter
 import com.intellij.usages.impl.UsageAdapter
 import com.intellij.util.ui.JBUI
@@ -23,7 +25,10 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.util.*
 import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
 
 private val LOG = Logger.getInstance(KResult::class.java)
 
@@ -88,13 +93,15 @@ class KErrorResult(error: String) : KResult {
     override fun getPresentation(): JComponent = panel
 }
 
-open class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, elementsString: String, val searchQuery: String, val project: Project, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KResult {
+class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, labelText: String, val searchQuery: String, val project: Project, val output: ConsoleOutput?, val refactoring: ((T) -> Unit)? = null) : KResult {
+    val usages = elements.map { if (it.isValid) UsageInfo2UsageAdapter(UsageInfo(it)) else UsageAdapter() }
     val panel: JComponent
     val label: JBLabel
     val mouseAdapter: MouseListener
 
     init {
-        label = JBLabel("<html><a>$elementsString</a></html>")
+        label = JBLabel()
+        setText(labelText)
         label.foreground = Color.BLUE
 
         val wrappedOpenUsagesView = Context.wrapCallback({ openUsagesView() })
@@ -106,47 +113,52 @@ open class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, elements
         panel.background = null
     }
 
-    fun openUsagesView() {
-        val usages = elements.map { if (it.isValid) UsageInfo2UsageAdapter(UsageInfo(it)) else UsageAdapter() }
-        if (refactoring != null) {
-            KUsagesPresentation(project).showUsages(usages, searchQuery, Runnable {
-                val elementsList = elements.toList()
-                for (it in elementsList) {
-                    try {
-                        refactoring.invoke(it)
-                    } catch (e: Exception) {
-                        val failedIndex = elementsList.indexOf(it)
-                        label.text = label.text.replace("" + elementsList.size + " element", "" + failedIndex + " element") + "successfully"
-                        val exception = KExceptionResult(project, e)
-                        output?.addResultAfter(exception, this)
-                        val remaining = usagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, project, output, refactoring)
-                        remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
-                        output?.addResultAfter(remaining, exception)
-                        break
-                    }
-                }
-                label.removeMouseListener(mouseAdapter)
-                label.text = label.text.replace("Refactor", "Refactored")
-                label.foreground = Color.GRAY
-                label.font = Font(label.font.name, Font.ITALIC, label.font.size)
-            })
-        } else {
-            KUsagesPresentation(project).showUsages(usages, searchQuery)
+    fun setText(labelText: String) {
+        label.text = "<html><a>$labelText</a></html>"
+    }
+
+    fun refactor(r: (T) -> Unit) {
+        val elementsList = elements.toList()
+        for (it in elementsList) {
+            try {
+                r.invoke(it)
+            } catch (e: Exception) {
+                val failedIndex = elementsList.indexOf(it)
+                label.text = label.text.replace("" + elementsList.size + " element", "" + failedIndex + " element") + "successfully"
+                val exception = KExceptionResult(project, e)
+                output?.addResultAfter(exception, this)
+                val remaining = usagesResult(elementsList.subList(failedIndex + 1, elementsList.size).asSequence(), searchQuery, project, output, refactoring)
+                remaining.label.text = remaining.label.text.replace("Refactor", "Refactor remaining")
+                output?.addResultAfter(remaining, exception)
+                break
+            }
         }
+        label.removeMouseListener(mouseAdapter)
+        label.text = label.text.replace("Refactor", "Refactored")
+        label.foreground = Color.GRAY
+        label.font = Font(label.font.name, Font.ITALIC, label.font.size)
+    }
+
+    fun openUsagesView() {
+        UsagesViewUsagesListener(project, searchQuery, if (refactoring != null) {
+            Runnable { refactor(refactoring) }
+        } else {
+            null
+        }).showUsages(project, usages)
     }
 
     override fun getPresentation(): JComponent = panel
 }
 
-fun <T: PsiElement> usagesResult(elements: SequenceLike<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {
+fun <T : PsiElement> usagesResult(elements: SequenceLike<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {
     return KUsagesResult(elements, "Search query", searchQuery, project, output, refactoring)
 }
 
-fun <T: PsiElement> usagesResult(refactoring: Refactoring<T>, searchQuery: String, project: Project, output: ConsoleOutput?): KUsagesResult<T> {
+fun <T : PsiElement> usagesResult(refactoring: Refactoring<T>, searchQuery: String, project: Project, output: ConsoleOutput?): KUsagesResult<T> {
     return usagesResult(refactoring.elements, searchQuery, project, output, refactoring.refactoring)
 }
 
-fun <T: PsiElement> usagesResult(elements: Sequence<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {
+fun <T : PsiElement> usagesResult(elements: Sequence<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {
     val elementsEvaluated = elements.cacheHead()
     var elementsString = "" + elementsEvaluated.evaluated.size + " element"
     if (elementsEvaluated.evaluated.size != 1) {

@@ -22,60 +22,45 @@ import com.intellij.usages.impl.UsageViewImpl
  * @author simon
  */
 
-class KUsagesPresentation {
+class UsagesViewUsagesListener(val project: Project, searchQuery: String, val refactoring: Runnable? = null): UsagesListener<Usage> {
     var usageViewSettings: UsageViewSettings = UsageViewSettings.getInstance();
     val myUsageViewSettings = UsageViewSettings();
-    val project: Project
-
-    constructor(project: Project) {
-        this.project = project
+    init {
+        myUsageViewSettings.loadState(usageViewSettings)
     }
 
+    val presentation = createPresentation(searchQuery, false)
+    var usagesView: UsageView? = null
 
-    fun <T : Usage> showUsages(usages: SequenceLike<T>, searchQuery: String, refactoring: Runnable? = null) {
-        myUsageViewSettings.loadState(usageViewSettings);
-        val presentation = createPresentation(searchQuery, false)
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Searching") {
-            override fun run(progressIndicator: ProgressIndicator) {
-                val tooManyUsagesStatus = TooManyUsagesStatus.createFor(progressIndicator)
-                var usagesCount = 0
-                var usagesView: UsageView? = null
-                usages.forEach {
-                    tooManyUsagesStatus.pauseProcessingIfTooManyUsages()
-                    if (usagesCount == 0) {
-                        usagesView = UsageViewManager.getInstance(project).createUsageView(emptyArray(), arrayOf<Usage>(it), presentation, null)
-                        ApplicationManager.getApplication().invokeLater {
-                            UsagesViewHelper.addContent(project, usagesView as UsageViewImpl, presentation)
-                            com.intellij.usageView.UsageViewManager.getInstance(project)
-                            val toolWindow = ToolWindowManager.getInstance(this.myProject).getToolWindow(ToolWindowId.FIND)
-                            toolWindow.show(null)
-                            toolWindow.activate(null)
-
-                        }
-                    } else if (usagesCount == KSettings.MAX_USAGES) {
-                        ApplicationManager.getApplication().invokeLater {
-                            TooManyUsagesStatus.getFrom(progressIndicator).switchTooManyUsagesStatus()
-                            val dialogAnswer = MessagesEx.showYesNoDialog("More than ${KSettings.MAX_USAGES} usages found.\nDo you want to continue?", "Too Many Results", null)
-                            if (dialogAnswer != MessagesEx.YES) {
-                                progressIndicator.cancel()
-                            }
-                            tooManyUsagesStatus.userResponded()
-                        }
-                    }
-                    usagesView!!.appendUsage(it)
-                    usagesCount++;
-                }
-
-                if (usagesView == null) {
-                    //todo: if no usages found
-                } else if (!progressIndicator.isCanceled && refactoring != null) {
-                    val canNotMakeString = RefactoringBundle.message("usageView.need.reRun")
-                    //todo deal with checkonly status and write action
-                    val wrappedRefactoring = Context.wrapCallback { ApplicationManager.getApplication().runWriteAction(refactoring) }
-                    usagesView!!.addPerformOperationAction(wrappedRefactoring, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
-                }
-            }
-        })
+    override fun processFirstUsage(usage: Usage) {
+        usagesView = UsageViewManager.getInstance(project).createUsageView(emptyArray(), arrayOf<Usage>(usage), presentation, null)
+        ApplicationManager.getApplication().invokeLater {
+            UsagesViewHelper.addContent(project, usagesView as UsageViewImpl, presentation)
+            com.intellij.usageView.UsageViewManager.getInstance(project)
+            val toolWindow = ToolWindowManager.getInstance(project).getToolWindow(ToolWindowId.FIND)
+            toolWindow.show(null)
+            toolWindow.activate(null)
+        }
+    }
+    override fun processOthers(usage: Usage) {
+        usagesView!!.appendUsage(usage)
+    }
+    override fun finished() {
+        if (refactoring != null) {
+            val canNotMakeString = RefactoringBundle.message("usageView.need.reRun")
+            //todo deal with checkonly status and write action
+            val wrappedRefactoring = Context.wrapCallback { ApplicationManager.getApplication().runWriteAction(refactoring) }
+            usagesView!!.addPerformOperationAction(wrappedRefactoring, "", canNotMakeString, RefactoringBundle.message("usageView.doAction"), false)
+        }
+    }
+    override fun empty() {
+        //todo: if no usages found
+    }
+    override fun cancelled() {
+        //nothing to do
+    }
+    override fun askTooManyUsages(): Boolean {
+        return MessagesEx.showYesNoDialog("More than ${KSettings.MAX_USAGES} usages found.\nDo you want to continue?", "Too Many Results", null) == MessagesEx.YES
     }
 
     private fun createPresentation(searchQuery: String, isShowCancelButton: Boolean): UsageViewPresentation {
@@ -90,4 +75,51 @@ class KUsagesPresentation {
 
         return presentation
     }
+}
+
+interface UsagesListener<T> {
+    fun processFirstUsage(usage: T)
+    fun processOthers(usage: T)
+    fun finished()
+    fun empty()
+    fun cancelled()
+    //this method is called in EDT
+    fun askTooManyUsages(): Boolean
+}
+
+fun <T> UsagesListener<T>.showUsages(project: Project, usages: SequenceLike<T>) {
+    ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Searching") {
+        override fun run(progressIndicator: ProgressIndicator) {
+            val tooManyUsagesStatus = TooManyUsagesStatus.createFor(progressIndicator)
+            var usagesCount = 0
+            usages.forEach {
+                tooManyUsagesStatus.pauseProcessingIfTooManyUsages()
+                if (usagesCount == 0) {
+                    processFirstUsage(it)
+                } else {
+                    processOthers(it)
+                }
+                if (usagesCount == KSettings.MAX_USAGES) {
+                    ApplicationManager.getApplication().invokeLater {
+                        TooManyUsagesStatus.getFrom(progressIndicator).switchTooManyUsagesStatus()
+                        if (askTooManyUsages()) {
+                            progressIndicator.cancel()
+                        }
+                        tooManyUsagesStatus.userResponded()
+                    }
+                }
+                usagesCount++;
+            }
+
+            if (!progressIndicator.isCanceled) {
+                if (usagesCount > 0) {
+                    finished()
+                } else {
+                    empty()
+                }
+            } else {
+                cancelled()
+            }
+        }
+    })
 }
