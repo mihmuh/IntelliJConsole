@@ -147,7 +147,7 @@ fun <T: PsiElement> usagesResult(refactoring: Refactoring<T>, searchQuery: Strin
 }
 
 fun <T: PsiElement> usagesResult(elements: Sequence<T>, searchQuery: String, project: Project, output: ConsoleOutput?, refactoring: ((T) -> Unit)? = null): KUsagesResult<T> {
-    val elementsEvaluated = elements.cacheHead(KSettings.TIME_LIMIT)
+    val elementsEvaluated = elements.cacheHead()
     var elementsString = "" + elementsEvaluated.evaluated.size + " element"
     if (elementsEvaluated.evaluated.size != 1) {
         elementsString += "s"

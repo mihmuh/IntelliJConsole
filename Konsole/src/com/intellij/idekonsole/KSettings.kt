@@ -23,7 +23,8 @@ internal class KSettings : PersistentStateComponent<KSettings.Data> {
 
         val BACKGROUND_COLOR = Color.LIGHT_GRAY
 
-        val TIME_LIMIT = 100L
+        val SEARCH_TIME = 100L
+        val TIME_LIMIT = 1000L
 
         val MAX_USAGES = 1000
     }

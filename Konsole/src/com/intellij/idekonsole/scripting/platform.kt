@@ -63,7 +63,7 @@ class Refactoring<T : PsiElement>(val elements: SequenceLike<T>, val refactoring
         return null
     }
     constructor(elements: Sequence<T>, refactoring: (T) -> Unit): this(elements.asSequenceLike(), refactoring) {
-        sequence = elements.cacheHead(maxSize = 1, minSize = 1)
+        sequence = elements.cacheHead(CacheOptions(maxSize = 1, minSize = 1))
     }
 }
 
