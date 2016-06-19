@@ -32,7 +32,6 @@ fun <T : PsiElement> show(refactoring: Refactoring<T>) {
         return show(EMPTY_SEQ)
     } else {
         val result = usagesResult(refactoring, "", project(), output())
-        result.openUsagesView()
         return show(result)
     }
 }
