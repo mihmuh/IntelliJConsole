@@ -107,7 +107,7 @@ class KEditor(val project: Project) : Disposable, ConsoleOutput {
     }
 
     fun handleCommand() {
-        if (containsErrors()) return
+        if (!canExecute()) return
 
         write {
             val callback = KCommandHandler.compile(module, context)
@@ -283,6 +283,10 @@ class KEditor(val project: Project) : Disposable, ConsoleOutput {
 
     private fun write(task: () -> Unit) {
         ApplicationManager.getApplication().runWriteAction(task)
+    }
+
+    fun canExecute(): Boolean {
+        return !containsErrors() && trimCommand(inputDocument.text) != ""
     }
 
     fun containsErrors(): Boolean {

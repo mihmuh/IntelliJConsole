@@ -22,7 +22,7 @@ class ExecuteAction : DumbAwareAction("Run", null, AllIcons.General.Run) {
     override fun update(e: AnActionEvent) {
         val editor = e.getData(KDataKeys.K_EDITOR)
         e.presentation.isEnabled = e.place == ActionPlaces.MAIN_MENU ||
-                editor != null && !editor.containsErrors()
+                editor != null && editor.canExecute()
     }
 
     override fun actionPerformed(e: AnActionEvent) {
