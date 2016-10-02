@@ -59,7 +59,7 @@ class UsagesViewUsagesListener(val project: Project, searchQuery: String, val re
     override fun cancelled() {
         //nothing to do
     }
-    override fun askTooManyUsages(): Boolean {
+    override fun askTooManyUsagesContinue(): Boolean {
         return MessagesEx.showYesNoDialog("More than ${KSettings.MAX_USAGES} usages found.\nDo you want to continue?", "Too Many Results", null) == MessagesEx.YES
     }
 
@@ -84,7 +84,7 @@ interface UsagesListener<T> {
     fun empty()
     fun cancelled()
     //this method is called in EDT
-    fun askTooManyUsages(): Boolean
+    fun askTooManyUsagesContinue(): Boolean
 }
 
 fun <T> UsagesListener<T>.showUsages(project: Project, usages: SequenceLike<T>) {
@@ -102,7 +102,7 @@ fun <T> UsagesListener<T>.showUsages(project: Project, usages: SequenceLike<T>) 
                 if (usagesCount == KSettings.MAX_USAGES) {
                     ApplicationManager.getApplication().invokeLater {
                         TooManyUsagesStatus.getFrom(progressIndicator).switchTooManyUsagesStatus()
-                        if (askTooManyUsages()) {
+                        if (!askTooManyUsagesContinue()) {
                             progressIndicator.cancel()
                         }
                         tooManyUsagesStatus.userResponded()

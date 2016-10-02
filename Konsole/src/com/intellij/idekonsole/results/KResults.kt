@@ -152,7 +152,7 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
                     usagesLabel.deactivate()
                 }
             }
-            override fun askTooManyUsages(): Boolean {
+            override fun askTooManyUsagesContinue(): Boolean {
                 if (myUsageViewListener == null) {
                     myStopped = true
                     return false
