@@ -239,7 +239,7 @@ class InteractiveLabel(private val action: () -> Unit) {
     var text: String
         get() = myLabel.text.substringAfter("<a>").substringBeforeLast("</a>")
         set(value) {
-            myLabel.text = "<html><a>$text</a></html>"
+            myLabel.text = "<html><a>$value</a></html>"
         }
 
     init {
