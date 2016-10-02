@@ -83,7 +83,7 @@ fun <T : PsiElement> SequenceLike<T>.refactor(refactoring: (T) -> Unit) =
         asSequenceLike().refactor(refactoring)
 
 @JvmName("refactorReferences") fun SequenceLike<PsiReference>.refactor(refactoring: (PsiElement) -> Unit) =
-        map { it.resolve() }.filterNotNull().refactor(refactoring)
+        map { it.element }.filterNotNull().refactor(refactoring)
 
 //------------ project structure navigation
 
