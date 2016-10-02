@@ -95,7 +95,7 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
     val usagesLabel = InteractiveLabel(Context.wrapCallback({
         openUsagesView()
     }))
-    val statusLabel = JBLabel()
+    val statusLabel = JBLabel("Searching... ")
     val panel = JBUI.Panels.simplePanel(usagesLabel.myLabel).addToLeft(statusLabel)
 
     val usagesList = ArrayList<T>()
@@ -122,14 +122,14 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
                 }
                 ApplicationManager.getApplication().invokeLater {
                     usagesList.add(usage)
-                    usagesLabel.text = "${usagesList.size} elements found."
+                    usagesLabel.text = (if (myStopped) "At least " else "") + "${usagesList.size} elements found."
                 }
             }
             override fun finished() {
                 myStopped = true
                 ApplicationManager.getApplication().invokeLater {
                     //todo one node should be shown as a ref
-                    statusLabel.text = "Finished."
+                    statusLabel.text = "Finished. "
                     myFinished = true
                     if (refactoring != null) {
                         usagesLabel.text = "Refactor ${usagesList.size} elements."
@@ -145,17 +145,18 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
                 }
             }
             override fun askTooManyUsagesContinue(): Boolean {
-                if (myUsageViewListener == null) {
+                val shouldContinue = myUsageViewListener != null && myUsageViewListener!!.askTooManyUsagesContinue()
+                if (!shouldContinue) {
                     myStopped = true
-                    return false
-                } else {
-                    return myUsageViewListener!!.askTooManyUsagesContinue()
+                    statusLabel.text = "Stopped. "
+                    usagesLabel.text = "At least ${usagesList.size} elements found."
                 }
+                return shouldContinue
             }
             override fun cancelled() {
                 myStopped = true
                 ApplicationManager.getApplication().invokeLater {
-                    statusLabel.text = "Cancelled."
+                    statusLabel.text = "Cancelled. "
                 }
             }
         }
