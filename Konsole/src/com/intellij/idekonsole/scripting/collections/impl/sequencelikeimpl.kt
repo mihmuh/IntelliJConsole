@@ -15,12 +15,15 @@ class SequenceSequenceLike<out T>(val sequence: Sequence<T>) : SequenceLike<T> {
         val iterator = sequence.iterator()
         var hasNext: Boolean = true
         while (hasNext) {
+            var next: T? = null
             runRead(context) {
-                if (iterator.hasNext()) {
-                    action(iterator.next())
-                } else {
-                    hasNext = false
+                hasNext = iterator.hasNext()
+                if (hasNext) {
+                    next = iterator.next()
                 }
+            }
+            if (hasNext) {
+                action(next!!)
             }
         }
     }
