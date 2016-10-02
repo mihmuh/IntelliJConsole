@@ -149,7 +149,7 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
                     myStopped = true
                     return false
                 } else {
-                    return true
+                    return myUsageViewListener!!.askTooManyUsagesContinue()
                 }
             }
             override fun cancelled() {
