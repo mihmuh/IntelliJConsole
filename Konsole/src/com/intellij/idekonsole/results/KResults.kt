@@ -109,7 +109,6 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
         val collectorListener = object: UsagesListener<T> {
             override fun processFirstUsage(usage: T) {
                 if (myUsageViewListener != null) {
-                    initListenerFromList()
                     myUsageViewListener!!.processFirstUsage(wrapUsage(usage))
                 }
                 ApplicationManager.getApplication().invokeLater {
@@ -119,7 +118,6 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
             }
             override fun processOthers(usage: T) {
                 if (myUsageViewListener != null) {
-                    initListenerFromList()
                     myUsageViewListener!!.processOthers(wrapUsage(usage))
                 }
                 ApplicationManager.getApplication().invokeLater {
@@ -129,9 +127,6 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
             }
             override fun finished() {
                 myStopped = true
-                if (myUsageViewListener != null) {
-                    initListenerFromList()
-                }
                 ApplicationManager.getApplication().invokeLater {
                     //todo one node should be shown as a ref
                     statusLabel.text = "Finished."
@@ -144,9 +139,6 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
             }
             override fun empty() {
                 myStopped = true
-                if (myUsageViewListener != null) {
-                    initListenerFromList()
-                }
                 ApplicationManager.getApplication().invokeLater {
                     usagesLabel.text = "Nothing found."
                     usagesLabel.deactivate()
@@ -194,6 +186,7 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
     private fun openUsagesView() {
         if (!myStopped && myUsageViewListener == null) {
             myUsageViewListener = createUsageViewListener()
+            initListenerFromList()
         } else if (myFinished) {
             showFromList()
         } else {
