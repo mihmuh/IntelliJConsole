@@ -206,7 +206,7 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
             myUsageViewListener!!.processFirstUsage(wrapUsage(usagesList.first()))
         }
         usagesList.asSequence().drop(1).forEach {
-            myUsageViewListener!!.processOthers(wrapUsage(usagesList.first()))
+            myUsageViewListener!!.processOthers(wrapUsage(it))
         }
     }
 
