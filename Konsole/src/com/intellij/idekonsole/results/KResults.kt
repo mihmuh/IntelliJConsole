@@ -1,6 +1,7 @@
 package com.intellij.idekonsole.results
 
 import com.intellij.idekonsole.context.Context
+import com.intellij.idekonsole.context.runRead
 import com.intellij.idekonsole.scripting.ConsoleOutput
 import com.intellij.idekonsole.scripting.Refactoring
 import com.intellij.idekonsole.scripting.collections.SequenceLike
@@ -107,6 +108,7 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
     init {
         panel.background = null
 
+        val context = Context.instance()
         val collectorListener = object: UsagesListener<T> {
             override fun processFirstUsage(usage: T) {
                 if (myUsageViewListener != null) {
@@ -119,7 +121,11 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
             }
             override fun processOthers(usage: T) {
                 if (myUsageViewListener != null) {
-                    myUsageViewListener!!.processOthers(wrapUsage(usage))
+                    var wrappedUsage: Usage? = null
+                    runRead(context) {
+                        wrappedUsage = wrapUsage(usage)
+                    }
+                    myUsageViewListener!!.processOthers(wrappedUsage!!)
                 }
                 ApplicationManager.getApplication().invokeLater {
                     if (!myStopped) {
