@@ -5,6 +5,7 @@ import com.intellij.idekonsole.scripting.ConsoleOutput
 import com.intellij.idekonsole.scripting.Refactoring
 import com.intellij.idekonsole.scripting.collections.SequenceLike
 import com.intellij.idekonsole.scripting.collections.asSequenceLike
+import com.intellij.idekonsole.scripting.collections.impl.wrapWithRead
 import com.intellij.idekonsole.scripting.collections.map
 import com.intellij.idekonsole.scripting.collections.toList
 import com.intellij.openapi.application.ApplicationManager
@@ -193,7 +194,7 @@ class KUsagesResult<T : PsiElement>(val elements: SequenceLike<T>, val searchQue
         } else if (myFinished) {
             showFromList()
         } else {
-            createUsageViewListener().showUsages(project, elements.map { wrapUsage(it) })
+            createUsageViewListener().showUsages(project, elements.wrapWithRead().map { wrapUsage(it) })
         }
     }
 
